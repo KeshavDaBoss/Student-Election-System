@@ -220,7 +220,14 @@ export default function AdminAnalyticsPage() {
           {/* Suggestions */}
           {race.suggestions && race.suggestions.length > 0 && (
              <div style={{ marginTop: "var(--space-2xl)", paddingTop: "var(--space-xl)", borderTop: "1px solid var(--gray-200)" }}>
-               <h3 className="mb-md" style={{ fontSize: "1.1rem" }}>💡 Student Suggestions</h3>
+               <h3 className="mb-md" style={{ fontSize: "1.1rem", display: "flex", alignItems: "center", gap: "8px" }}>
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                   <circle cx="12" cy="12" r="10"></circle>
+                   <line x1="12" y1="16" x2="12" y2="12"></line>
+                   <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                 </svg>
+                 Student Suggestions
+               </h3>
                <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-sm)" }}>
                  {race.suggestions.map((sug, i) => (
                    <span key={i} className="badge badge--info" style={{ padding: "6px 12px", textTransform: "none" }}>

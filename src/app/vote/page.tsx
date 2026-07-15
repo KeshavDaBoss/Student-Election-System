@@ -366,7 +366,13 @@ export default function VotePage() {
         {/* Greeting Popup */}
         {showGreeting && voterInfo && (
           <div className="greeting" style={{ paddingTop: "20vh" }}>
-            <div className="greeting__wave">👋</div>
+            <div className="greeting__wave">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v4M18.5 12c-.83 0-1.5-.67-1.5-1.5v-3c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v4M22.5 14c-.83 0-1.5-.67-1.5-1.5v-1c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v3M10.5 11c-.83 0-1.5-.67-1.5-1.5v-7c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v6" />
+                <path d="M5.5 13.5V11c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v4" />
+                <path d="M15.5 22H8.5a4 4 0 0 1-4-4v-4.5a2.5 2.5 0 0 1 5 0V15h11a2.5 2.5 0 0 1-5 0V11M2.5 13.5a2.5 2.5 0 0 1 5 0" />
+              </svg>
+            </div>
             <h2 className="greeting__text">
               Hey <span className="greeting__name">{voterInfo.name.split(" ")[0]}</span>!
             </h2>
@@ -395,8 +401,12 @@ export default function VotePage() {
             </div>
 
             {error && (
-              <div className="alert alert--error mb-xl">
-                <span>⚠️</span>
+              <div className="alert alert--error mb-lg" role="alert" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
                 <span>{error}</span>
               </div>
             )}
@@ -414,7 +424,14 @@ export default function VotePage() {
             {/* Suggestions Section */}
             <div className="position-section mb-2xl">
               <h3 style={{ marginBottom: "var(--space-sm)" }}>
-                💡 Suggestions{" "}
+                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                  Suggestions{" "}
+                </span>
                 <span
                   style={{
                     fontSize: "0.8rem",
@@ -508,7 +525,10 @@ export default function VotePage() {
                 onClick={() => setShowConfirm(true)}
                 disabled={submitting}
               >
-                Submit My Vote ✓
+                Submit My Vote
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
               </button>
               <p
                 className="mt-md"

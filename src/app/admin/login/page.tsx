@@ -124,8 +124,12 @@ export default function AdminLoginPage() {
           </p>
 
           {error && (
-            <div className="alert alert--error mb-lg">
-              <span>⚠️</span>
+            <div className="alert alert--error mb-lg" role="alert" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
               <span>{error}</span>
             </div>
           )}

@@ -86,7 +86,7 @@ export default function AdminOverviewPage() {
           <p className="section-subtitle">Student Cabinet Elections Overview</p>
         </div>
         <div className={`badge ${data?.electionStatus === "live" ? "badge--success" : data?.electionStatus === "scheduled" ? "badge--warning" : "badge--info"}`}>
-          {data?.electionStatus === "live" ? "● Live" : data?.electionStatus === "scheduled" ? "⏳ Scheduled" : "◼ Not Started"}
+          {data?.electionStatus === "live" ? "Live" : data?.electionStatus === "scheduled" ? "Scheduled" : "Not Started"}
         </div>
       </div>
 
@@ -172,7 +172,12 @@ export default function AdminOverviewPage() {
               border: "1px solid var(--gray-200)",
             }}
           >
-            <p style={{ fontSize: "2rem", marginBottom: "var(--space-sm)" }}>📭</p>
+            <div style={{ marginBottom: "var(--space-sm)", display: "flex", justifyContent: "center" }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                <path d="M2 4l10 8 10-8"></path>
+              </svg>
+            </div>
             <p>No votes cast yet</p>
           </div>
         )}

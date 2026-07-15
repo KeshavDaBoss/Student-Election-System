@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { students } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
-import { sql, ilike, or } from "drizzle-orm";
+import { sql, ilike, or, eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   const admin = await requireAdmin(request);
@@ -74,6 +74,28 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+    
+    // Single student creation
+    if (body.student) {
+      const { name, electionNumber, class: studentClass, section } = body.student;
+      
+      // Check if election number exists
+      const existing = await db.select().from(students).where(eq(students.electionNumber, electionNumber)).limit(1);
+      if (existing.length > 0) {
+        return NextResponse.json({ error: "Election number already exists" }, { status: 400 });
+      }
+
+      await db.insert(students).values({
+        name,
+        electionNumber,
+        class: studentClass,
+        section,
+      });
+
+      return NextResponse.json({ success: true });
+    }
+
+    // Bulk upload
     const { students: parsedStudents } = body;
 
     if (!Array.isArray(parsedStudents) || parsedStudents.length === 0) {
@@ -83,14 +105,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upsert students (using onConflictDoUpdate would be cleaner, but requires specifying all columns.
-    // Drizzle Neon HTTP driver might have some quirks with bulk upserts on unique constraints.
-    // For simplicity and safety, we'll insert in batches and handle conflicts gracefully if possible, 
-    // or just use Drizzle's ON CONFLICT DO UPDATE).
-
     let count = 0;
-    
-    // We process in smaller chunks to avoid request size limits if CSV is huge
     const chunkSize = 500;
     for (let i = 0; i < parsedStudents.length; i += chunkSize) {
       const chunk = parsedStudents.slice(i, i + chunkSize);
@@ -109,9 +124,67 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, count });
   } catch (error) {
-    console.error("Voter upload error:", error);
+    console.error("Voter create/upload error:", error);
     return NextResponse.json(
-      { error: "Failed to upload voters to database." },
+      { error: "Failed to process voters." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  const admin = await requireAdmin(request);
+  if (!admin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { id, name, electionNumber, class: studentClass, section } = body;
+
+    // Check if new election number belongs to someone else
+    const existing = await db.select().from(students).where(eq(students.electionNumber, electionNumber)).limit(1);
+    if (existing.length > 0 && existing[0].id !== id) {
+      return NextResponse.json({ error: "Election number belongs to another voter" }, { status: 400 });
+    }
+
+    await db.update(students).set({
+      name,
+      electionNumber,
+      class: studentClass,
+      section,
+    }).where(eq(students.id, id));
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Voter update error:", error);
+    return NextResponse.json(
+      { error: "Failed to update voter." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const admin = await requireAdmin(request);
+  if (!admin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const id = parseInt(searchParams.get("id") || "0", 10);
+
+  if (!id) {
+    return NextResponse.json({ error: "ID required" }, { status: 400 });
+  }
+
+  try {
+    await db.delete(students).where(eq(students.id, id));
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Voter delete error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete voter." },
       { status: 500 }
     );
   }

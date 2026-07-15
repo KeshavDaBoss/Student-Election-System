@@ -134,7 +134,13 @@ export default function VoteSuccessPage() {
             className="success-title"
             style={{ fontSize: "2rem", marginBottom: "var(--space-md)" }}
           >
-            Vote Recorded! 🎉
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px" }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Vote Recorded!
+            </div>
           </h1>
 
           <p
@@ -167,7 +173,10 @@ export default function VoteSuccessPage() {
                   fontWeight: 500,
                 }}
               >
-                ✓ Your ballot is anonymous and secure
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: "2px" }}>
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Your ballot is anonymous and secure
               </p>
             </div>
 

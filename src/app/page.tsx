@@ -8,10 +8,8 @@ import { useGSAP } from "@gsap/react";
 gsap.registerPlugin(useGSAP);
 
 // Class options for APS Bolarum
-const CLASS_OPTIONS = [
-  "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12",
-];
-const SECTION_OPTIONS = ["A", "B", "C", "D", "E", "F"];
+const CLASS_OPTIONS = ["6", "7", "8", "9", "10", "11", "12"];
+const SECTION_OPTIONS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -256,16 +254,23 @@ export default function LoginPage() {
 
           {/* Error Alert */}
           {error && (
-            <div className="alert alert--error mb-lg" role="alert">
-              <span>⚠️</span>
+            <div className="alert alert--error mb-lg" role="alert" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
               <span>{error}</span>
             </div>
           )}
 
           {/* Rate Limit Warning */}
           {isLocked && (
-            <div className="countdown mb-lg">
-              <span className="countdown__icon">🔒</span>
+            <div className="countdown mb-lg" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
               <span className="countdown__text">Too many attempts. Try again in</span>
               <span className="countdown__time">{countdown}</span>
             </div>
@@ -320,7 +325,7 @@ export default function LoginPage() {
                   <option value="">Select</option>
                   {CLASS_OPTIONS.map((c) => (
                     <option key={c} value={c}>
-                      Class {c}
+                      {c}
                     </option>
                   ))}
                 </select>
@@ -340,7 +345,7 @@ export default function LoginPage() {
                   <option value="">Select</option>
                   {SECTION_OPTIONS.map((s) => (
                     <option key={s} value={s}>
-                      Section {s}
+                      {s}
                     </option>
                   ))}
                 </select>

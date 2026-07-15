@@ -1,5 +1,3 @@
-import Papa from "papaparse";
-
 export interface CSVStudentRow {
   name: string;
   electionNumber: string;
@@ -41,9 +39,10 @@ export function parseStudentCSV(csvContent: string): CSVParseResult {
   if (rows.length > 0) {
     const firstRow = rows[0];
     const isHeader =
-      firstRow[0]?.toLowerCase().includes("name") ||
-      firstRow[1]?.toLowerCase().includes("election") ||
-      firstRow[1]?.toLowerCase().includes("number");
+      firstRow[0]?.toLowerCase() === "name" ||
+      firstRow[1]?.toLowerCase() === "number" ||
+      firstRow[2]?.toLowerCase() === "class" ||
+      firstRow[3]?.toLowerCase() === "section";
     if (isHeader) {
       startIdx = 1;
     }
@@ -55,7 +54,7 @@ export function parseStudentCSV(csvContent: string): CSVParseResult {
 
     if (!row || row.length < 4) {
       errors.push(
-        `Row ${rowNum}: Expected 4 columns (Name, Election Number, Class, Section), got ${row?.length || 0}`
+        `Row ${rowNum}: Expected 4 columns (name, number, class, section), got ${row?.length || 0}`
       );
       continue;
     }
@@ -74,20 +73,21 @@ export function parseStudentCSV(csvContent: string): CSVParseResult {
     // Validate election number (6 char alphanumeric)
     if (!electionNumber || !/^[0-9A-Za-z]{6}$/.test(electionNumber)) {
       errors.push(
-        `Row ${rowNum}: Election Number must be exactly 6 alphanumeric characters (got "${electionNumber || ""}")`
+        `Row ${rowNum}: Election Number must be exactly 6 alphanumeric characters`
       );
       continue;
     }
 
-    // Validate class
-    if (!studentClass) {
-      errors.push(`Row ${rowNum}: Class is required`);
+    // Validate class (6 to 12)
+    if (!studentClass || !/^(6|7|8|9|10|11|12)$/.test(studentClass)) {
+      errors.push(`Row ${rowNum}: Class must be a number between 6 and 12`);
       continue;
     }
 
-    // Validate section
-    if (!section) {
-      errors.push(`Row ${rowNum}: Section is required`);
+    // Validate section (A to K)
+    const upperSection = section?.toUpperCase();
+    if (!upperSection || !/^[A-K]$/.test(upperSection)) {
+      errors.push(`Row ${rowNum}: Section must be a single letter from A to K`);
       continue;
     }
 
@@ -95,7 +95,7 @@ export function parseStudentCSV(csvContent: string): CSVParseResult {
       name,
       electionNumber,
       class: studentClass,
-      section: section.toUpperCase(),
+      section: upperSection,
     });
   }
 

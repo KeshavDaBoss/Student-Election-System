@@ -8,6 +8,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   oauth_failed: "Google authentication failed. Please try again.",
   no_id_token: "Invalid response from Google. Please try again.",
   invalid_google_token: "Google token verification failed. Please try again.",
+  not_authorized: "This email is not authorized for admin access.",
   server_error: "Server error during authentication. Please try again.",
 };
 
@@ -15,11 +16,8 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const containerRef = useRef<HTMLDivElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
 
-  const [email, setEmail] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const oauthError = searchParams.get("error");
@@ -31,47 +29,6 @@ export default function AdminLoginPage() {
   const handleGoogleLogin = useCallback(() => {
     window.location.href = "/api/auth/admin/oauth";
   }, []);
-
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      setError("");
-
-      if (!email || !email.includes("@")) {
-        setError("Please enter a valid email address.");
-
-        return;
-      }
-
-      setLoading(true);
-
-      try {
-        const res = await fetch("/api/auth/admin", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          setError(data.error || "Access denied.");
-
-          return;
-        }
-
-        // Store admin token
-        document.cookie = `ses_admin_token=${data.token}; path=/; max-age=28800; SameSite=Strict`;
-
-        router.push("/admin");
-      } catch {
-        setError("Network error. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [email, router]
-  );
 
   return (
     <div className="page-wrapper" ref={containerRef}>
@@ -114,7 +71,7 @@ export default function AdminLoginPage() {
               marginBottom: "var(--space-2xl)",
             }}
           >
-            Sign in with Google or enter your authorized admin email
+            Sign in with your Google account to access the dashboard
           </p>
 
           {error && (
@@ -131,15 +88,17 @@ export default function AdminLoginPage() {
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="btn btn-full mb-lg"
+            className="btn btn-full"
             style={{
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
               gap: "10px",
               border: "1px solid var(--gray-700)",
               background: "transparent",
-              color: "var(--gray-100)",
+              color: "#ffffff",
+              fontWeight: 500,
+              fontSize: "1rem",
             }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24">
@@ -162,46 +121,6 @@ export default function AdminLoginPage() {
             </svg>
             Sign in with Google
           </button>
-
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "var(--space-lg)" }}>
-            <div style={{ flex: 1, height: 1, background: "var(--gray-700)" }} />
-            <span style={{ fontSize: "0.75rem", color: "var(--gray-500)" }}>OR</span>
-            <div style={{ flex: 1, height: 1, background: "var(--gray-700)" }} />
-          </div>
-
-          <form ref={formRef} onSubmit={handleSubmit}>
-            <div className="form-group mb-xl">
-              <label className="form-label" htmlFor="admin-email">
-                Email Address
-              </label>
-              <input
-                id="admin-email"
-                type="email"
-                className="form-input"
-                placeholder="admin@school.edu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                autoFocus
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary btn-full admin-submit"
-              disabled={loading}
-              style={{ background: "linear-gradient(135deg, var(--gray-800), var(--gray-900))" }}
-            >
-              {loading ? (
-                <>
-                  <span className="spinner" style={{ borderTopColor: "white", borderColor: "rgba(255,255,255,0.3)" }} />
-                  Verifying...
-                </>
-              ) : (
-                "Access Dashboard"
-              )}
-            </button>
-          </form>
         </div>
 
         <div style={{ textAlign: "center", marginTop: "var(--space-xl)" }}>

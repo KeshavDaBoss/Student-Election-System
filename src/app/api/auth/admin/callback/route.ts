@@ -85,23 +85,12 @@ export async function GET(request: NextRequest) {
       .where(eq(admins.email, email))
       .limit(1);
 
-    let admin = existingAdmins[0];
+    const admin = existingAdmins[0];
 
     if (!admin) {
-      const PROTECTED_EMAILS = new Set([
-        "keshavprathamyadav@gmail.com",
-        "prathamkeshavyadav@gmail.com",
-      ]);
-
-      const isProtected = PROTECTED_EMAILS.has(email);
-      const role = isProtected ? "superadmin" : "admin";
-
-      const [newAdmin] = await db
-        .insert(admins)
-        .values({ email, isProtected, role })
-        .returning();
-
-      admin = newAdmin;
+      return NextResponse.redirect(
+        new URL("/admin/login?error=not_authorized", request.url)
+      );
     }
 
     const token = await signToken({

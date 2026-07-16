@@ -157,29 +157,6 @@ export default function VoteSuccessPage() {
           </p>
 
           <div className="success-action">
-            <div
-              style={{
-                padding: "var(--space-md) var(--space-lg)",
-                background: "var(--success-light)",
-                borderRadius: "var(--radius-md)",
-                border: "1px solid rgba(76, 175, 80, 0.2)",
-                marginBottom: "var(--space-xl)",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "0.875rem",
-                  color: "#2E7D32",
-                  fontWeight: 500,
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: "2px" }}>
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                Your ballot is anonymous and secure
-              </p>
-            </div>
-
             <a href="/" className="btn btn-secondary btn-full">
               Return to Home
             </a>

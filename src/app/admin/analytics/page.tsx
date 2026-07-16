@@ -76,8 +76,8 @@ export default function AdminAnalyticsPage() {
   }
 
   return (
-    <div ref={containerRef}>
-      <div className="section-header">
+    <div ref={containerRef} style={{ width: "100%", maxWidth: "100vw", overflowX: "hidden", boxSizing: "border-box" }}>
+      <div className="section-header" style={{ maxWidth: "100%" }}>
         <div>
           <h1 className="section-title">Election Analytics</h1>
           <p className="section-subtitle">Real-time ranked-choice voting results</p>
@@ -85,7 +85,7 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {analytics.map((race) => (
-        <div key={race.positionId} className="glass-card analytics-card mb-2xl">
+        <div key={race.positionId} className="glass-card analytics-card mb-2xl" style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", boxSizing: "border-box" }}>
           <div className="section-header" style={{ marginBottom: "var(--space-md)" }}>
             <h2 style={{ fontSize: "1.5rem" }}>{race.positionTitle}</h2>
             <div className="badge badge--orange">
@@ -116,9 +116,9 @@ export default function AdminAnalyticsPage() {
             </div>
           )}
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2xl)" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2xl)", overflow: "hidden" }}>
             {/* 1st Choice Votes Chart */}
-            <div style={{ flex: "1 1 300px", minWidth: 0 }}>
+            <div style={{ flex: "1 1 260px", minWidth: 0, overflowX: "auto" }}>
               <h3 className="mb-md" style={{ fontSize: "1.1rem" }}>First-Choice Votes</h3>
               <div className="bar-chart">
                 {Object.entries(race.firstChoiceVotes)
@@ -144,7 +144,7 @@ export default function AdminAnalyticsPage() {
             </div>
 
             {/* Average Position */}
-            <div style={{ flex: "1 1 300px", minWidth: 0 }}>
+            <div style={{ flex: "1 1 260px", minWidth: 0, overflowX: "auto" }}>
               <h3 className="mb-md" style={{ fontSize: "1.1rem" }}>Average Rank Position</h3>
               <p style={{ fontSize: "0.8rem", color: "var(--gray-500)", marginBottom: "var(--space-sm)" }}>Lower is better (1.0 = ranked 1st by everyone)</p>
               <div className="table-container">
@@ -177,7 +177,7 @@ export default function AdminAnalyticsPage() {
             <div style={{ marginTop: "var(--space-2xl)", paddingTop: "var(--space-xl)", borderTop: "1px solid var(--gray-200)" }}>
               <h3 className="mb-lg" style={{ fontSize: "1.1rem" }}>Round-by-Round Breakdown</h3>
               
-              <div style={{ display: "flex", gap: "var(--space-md)", overflowX: "auto", paddingBottom: "var(--space-sm)" }}>
+              <div style={{ display: "flex", gap: "var(--space-md)", overflowX: "auto", paddingBottom: "var(--space-sm)", WebkitOverflowScrolling: "touch" }}>
                 {race.rounds.map((round) => (
                   <div key={round.round} style={{ minWidth: 280, background: "var(--gray-50)", padding: "var(--space-md)", borderRadius: "var(--radius-md)", border: "1px solid var(--gray-200)" }}>
                     <h4 style={{ fontSize: "1rem", marginBottom: "var(--space-sm)", borderBottom: "1px solid var(--gray-300)", paddingBottom: "4px" }}>

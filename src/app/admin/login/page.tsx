@@ -2,10 +2,6 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
-
-gsap.registerPlugin(useGSAP);
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -16,16 +12,7 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useGSAP(
-    () => {
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-      tl.from(".admin-logo", { y: -20, opacity: 0, duration: 0.7 })
-        .from(".admin-title", { y: 15, opacity: 0, duration: 0.5 }, "-=0.3")
-        .from(".form-group", { y: 20, opacity: 0, duration: 0.5, stagger: 0.1 }, "-=0.2")
-        .from(".admin-submit", { y: 15, opacity: 0, duration: 0.4 }, "-=0.1");
-    },
-    { scope: containerRef }
-  );
+
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -34,10 +21,7 @@ export default function AdminLoginPage() {
 
       if (!email || !email.includes("@")) {
         setError("Please enter a valid email address.");
-        gsap.to(formRef.current, {
-          x: [-8, 8, -6, 6, -3, 3, 0],
-          duration: 0.4,
-        });
+
         return;
       }
 
@@ -54,22 +38,14 @@ export default function AdminLoginPage() {
 
         if (!res.ok) {
           setError(data.error || "Access denied.");
-          gsap.to(formRef.current, {
-            x: [-8, 8, -6, 6, -3, 3, 0],
-            duration: 0.4,
-          });
+
           return;
         }
 
         // Store admin token
         document.cookie = `ses_admin_token=${data.token}; path=/; max-age=28800; SameSite=Strict`;
 
-        gsap.to(containerRef.current, {
-          opacity: 0,
-          y: -10,
-          duration: 0.3,
-          onComplete: () => router.push("/admin"),
-        });
+        router.push("/admin");
       } catch {
         setError("Network error. Please try again.");
       } finally {

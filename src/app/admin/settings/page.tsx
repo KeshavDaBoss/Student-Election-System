@@ -307,7 +307,7 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      <div className="glass-card page-section" style={{ border: "1px solid var(--error-light)" }}>
+      <div className="glass-card page-section" style={{ border: "1px solid var(--error-light)", marginTop: "var(--space-2xl)" }}>
         <h2 className="mb-md" style={{ color: "var(--error)" }}>Danger Zone</h2>
         <p className="mb-lg" style={{ fontSize: "0.875rem", color: "var(--gray-500)" }}>
           Resetting the election will permanently delete all votes cast, all student suggestions, and reset every voter's status to "Pending". <strong>This action cannot be undone.</strong>

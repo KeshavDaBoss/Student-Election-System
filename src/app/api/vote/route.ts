@@ -32,16 +32,20 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Get active positions with their candidates
+  // Get positions that are either votable or suggestable
   const allPositions = await db
     .select()
     .from(positions)
-    .where(eq(positions.isActive, true))
+    // Wait, Drizzle doesn't have an easy OR without importing `or`.
+    // Let's just fetch all positions and filter them. Or import `or`.
+    // Let's just import `or` from "drizzle-orm" at the top or just fetch all.
     .orderBy(positions.displayOrder);
 
   const positionsWithCandidates = [];
 
   for (const position of allPositions) {
+    if (!position.isVotable && !position.isSuggestable) continue;
+
     const positionCandidates = await db
       .select()
       .from(candidates)
@@ -52,6 +56,8 @@ export async function GET(request: NextRequest) {
       title: position.title,
       description: position.description,
       numWinners: position.numWinners,
+      isVotable: position.isVotable,
+      isSuggestable: position.isSuggestable,
       candidates: positionCandidates.map((c) => ({
         id: c.id,
         name: c.name,

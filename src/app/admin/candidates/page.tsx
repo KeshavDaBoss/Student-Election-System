@@ -18,7 +18,8 @@ interface Position {
   id: number;
   title: string;
   numWinners: number;
-  isActive: boolean;
+  isVotable: boolean;
+  isSuggestable: boolean;
   displayOrder: number;
   candidates: Candidate[];
 }
@@ -86,7 +87,8 @@ export default function AdminCandidatesPage() {
       id: editingPosition.id,
       title: formData.get("title"),
       numWinners: parseInt(formData.get("numWinners") as string, 10),
-      isActive: formData.get("isActive") === "true",
+      isVotable: formData.get("isVotable") === "true",
+      isSuggestable: formData.get("isSuggestable") === "true",
       displayOrder: parseInt(formData.get("displayOrder") as string, 10),
     };
 
@@ -131,6 +133,21 @@ export default function AdminCandidatesPage() {
     }
   };
 
+  const deletePosition = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this position? All candidates and votes for this position will be permanently deleted.")) return;
+    try {
+      const token = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ses_admin_token="))?.split("=")[1];
+      await fetch(`/api/admin/candidates/positions?id=${id}`, { 
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchPositions();
+    } catch (err) {
+      console.error(err);
+      setError("Failed to delete position.");
+    }
+  };
+
   const deleteCandidate = async (id: number) => {
     if (!confirm("Are you sure you want to delete this candidate?")) return;
     try {
@@ -159,7 +176,7 @@ export default function AdminCandidatesPage() {
         <button 
           className="btn btn-primary"
           onClick={() => {
-            setEditingPosition({ id: 0, title: "", numWinners: 1, isActive: true, displayOrder: positions.length + 1, candidates: [] });
+            setEditingPosition({ id: 0, title: "", numWinners: 1, isVotable: true, isSuggestable: false, displayOrder: positions.length + 1, candidates: [] });
             setShowPositionModal(true);
           }}
         >
@@ -176,7 +193,8 @@ export default function AdminCandidatesPage() {
               <div>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {position.title}
-                  {!position.isActive && <span className="badge badge--warning">Inactive</span>}
+                  {position.isVotable && <span className="badge badge--green">Votable</span>}
+                  {position.isSuggestable && <span className="badge badge--orange">Suggestable</span>}
                 </h3>
                 <p style={{ fontSize: "0.875rem", color: "var(--gray-500)", marginTop: "4px" }}>
                   {position.numWinners} {position.numWinners === 1 ? "Winner" : "Winners"} • {position.candidates.length} Candidates
@@ -190,11 +208,19 @@ export default function AdminCandidatesPage() {
                   Edit Position
                 </button>
                 <button 
-                  className="btn btn-primary" style={{ padding: "8px 16px" }}
-                  onClick={() => { setEditingCandidate({ positionId: position.id }); setShowCandidateModal(true); }}
+                  className="btn btn-secondary" style={{ padding: "8px 16px", color: "var(--error)", borderColor: "rgba(229, 57, 53, 0.2)" }}
+                  onClick={() => deletePosition(position.id)}
                 >
-                  + Add Candidate
+                  Delete Position
                 </button>
+                {position.isVotable && (
+                  <button 
+                    className="btn btn-primary" style={{ padding: "8px 16px" }}
+                    onClick={() => { setEditingCandidate({ positionId: position.id }); setShowCandidateModal(true); }}
+                  >
+                    + Add Candidate
+                  </button>
+                )}
               </div>
             </div>
 
@@ -259,11 +285,18 @@ export default function AdminCandidatesPage() {
                 <label className="form-label">Display Order</label>
                 <input name="displayOrder" type="number" className="form-input" defaultValue={editingPosition.displayOrder} required />
               </div>
-              <div className="form-group mb-xl" style={{ textAlign: "left" }}>
-                <label className="form-label">Status</label>
-                <select name="isActive" className="form-input form-select" defaultValue={editingPosition.isActive.toString()}>
-                  <option value="true">Active (Visible)</option>
-                  <option value="false">Inactive (Hidden)</option>
+              <div className="form-group mb-md" style={{ textAlign: "left" }}>
+                <label className="form-label" style={{ display: "block", marginBottom: "8px" }}>Is Votable (Appears in ranking list)</label>
+                <select name="isVotable" className="form-input form-select" defaultValue={editingPosition.isVotable.toString()}>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div className="form-group mb-lg" style={{ textAlign: "left" }}>
+                <label className="form-label" style={{ display: "block", marginBottom: "8px" }}>Is Suggestable (Appears in suggestions dropdown)</label>
+                <select name="isSuggestable" className="form-input form-select" defaultValue={editingPosition.isSuggestable.toString()}>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
                 </select>
               </div>
               <div className="modal-actions">

@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const positionsResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(positions)
-      .where(eq(positions.isActive, true));
+      .where(eq(positions.isVotable, true));
     const totalPositions = Number(positionsResult[0].count);
 
     // Election status

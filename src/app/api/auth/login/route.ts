@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     // Get client identifier for rate limiting
     const forwarded = request.headers.get("x-forwarded-for");
     const ip = forwarded?.split(",")[0]?.trim() || "unknown";
-    const identifier = `${ip}_${electionNumber}`;
+    const identifier = ip;
 
     // Check rate limiting
     const existingAttempts = await db
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check if the lockout has expired → reset
+      // Check if the lockout has expired → reset fully
       if (attempt.lockedUntil && new Date(attempt.lockedUntil) <= new Date()) {
         await db
           .update(loginAttempts)
@@ -65,13 +65,18 @@ export async function POST(request: NextRequest) {
             lastAttemptAt: new Date(),
           })
           .where(eq(loginAttempts.id, attempt.id));
+        // Reset the in-memory attempt so we treat this as a fresh start
+        attempt.attemptCount = 0;
+        attempt.lockedUntil = null;
+        attempt.lastAttemptAt = new Date();
       }
 
-      // Check if window has expired (5 min since first attempt)
-      const timeSinceFirst =
+      // Check if the 5-minute window has expired since the FIRST attempt time in this window
+      // (if > 5 min, reset the counter)
+      const timeSinceWindowStart =
         Date.now() - new Date(attempt.lastAttemptAt).getTime();
-      if (timeSinceFirst > LOCKOUT_DURATION_MS) {
-        // Reset counter
+      if (timeSinceWindowStart > LOCKOUT_DURATION_MS) {
+        // Reset counter — window expired
         await db
           .update(loginAttempts)
           .set({
@@ -80,6 +85,8 @@ export async function POST(request: NextRequest) {
             lastAttemptAt: new Date(),
           })
           .where(eq(loginAttempts.id, attempt.id));
+        attempt.attemptCount = 0;
+        attempt.lastAttemptAt = new Date();
       }
     }
 
@@ -108,7 +115,9 @@ export async function POST(request: NextRequest) {
           .update(loginAttempts)
           .set({
             attemptCount: newCount,
-            lastAttemptAt: new Date(),
+            // Only update the window start time if we are locking them out,
+            // otherwise keep the original window start time.
+            ...(shouldLock ? { lastAttemptAt: new Date() } : {}),
             lockedUntil: shouldLock
               ? new Date(Date.now() + LOCKOUT_DURATION_MS)
               : null,

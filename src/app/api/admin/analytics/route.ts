@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const allPositions = await db.select().from(positions).where(eq(positions.isActive, true));
+    const allPositions = await db.select().from(positions).where(eq(positions.isVotable, true));
     const allCandidates = await db.select().from(candidates);
     const allVotes = await db.select().from(votes);
     

@@ -492,22 +492,30 @@ a:hover {
   border-radius: var(--radius-lg);
   padding: var(--space-md) var(--space-lg);
   cursor: grab;
-  transition: all var(--transition-base);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   user-select: none;
+  will-change: transform;
 }
 
 .candidate-card:hover {
   border-color: var(--orange-300);
   box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
 }
 
 .candidate-card.dragging {
-  box-shadow: var(--shadow-xl);
-  border-color: var(--orange-400);
-  opacity: 0.9;
-  transform: scale(1.02);
+  opacity: 0.35;
+  border-color: var(--orange-300);
+  box-shadow: none;
   cursor: grabbing;
+}
+
+.candidate-card.drag-overlay {
+  cursor: grabbing;
+  border-color: var(--orange-500);
+}
+
+.candidate-card__rank-col {
+  flex-shrink: 0;
 }
 
 .candidate-card__drag-handle {
@@ -517,6 +525,11 @@ a:hover {
   padding: 4px;
   color: var(--gray-400);
   flex-shrink: 0;
+  cursor: grab;
+}
+
+.candidate-card__drag-handle:active {
+  cursor: grabbing;
 }
 
 .candidate-card__drag-handle span {
@@ -543,6 +556,14 @@ a:hover {
   font-size: 0.8125rem;
   color: var(--gray-500);
   margin-top: 2px;
+}
+
+/* Arrow move buttons on candidate cards */
+.candidate-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 /* --- Modal / Overlay --- */
@@ -1169,6 +1190,12 @@ a:hover {
 }
 
 /* --- Utility Classes --- */
+.login-submit,
+.admin-submit {
+  /* Ensure buttons are always visible even if GSAP animation doesn't complete */
+  opacity: 1;
+}
+
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 .mt-xs { margin-top: var(--space-xs); }

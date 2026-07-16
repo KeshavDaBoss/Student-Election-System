@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
     await db.insert(positions).values({
       title: data.title,
       numWinners: data.numWinners,
-      isActive: data.isActive,
+      isVotable: data.isVotable,
+      isSuggestable: data.isSuggestable,
       displayOrder: data.displayOrder,
     });
     return NextResponse.json({ success: true });
@@ -31,11 +32,28 @@ export async function PUT(request: NextRequest) {
     await db.update(positions).set({
       title: data.title,
       numWinners: data.numWinners,
-      isActive: data.isActive,
+      isVotable: data.isVotable,
+      isSuggestable: data.isSuggestable,
       displayOrder: data.displayOrder,
     }).where(eq(positions.id, data.id));
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: "Failed to update position" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const admin = await requireAdmin(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "Missing position ID" }, { status: 400 });
+
+    await db.delete(positions).where(eq(positions.id, parseInt(id)));
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to delete position" }, { status: 500 });
   }
 }

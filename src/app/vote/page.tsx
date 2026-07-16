@@ -12,6 +12,8 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -44,37 +46,22 @@ interface VoterInfo {
   section: string;
 }
 
-// --- Sortable Candidate Card ---
-const SortableCandidate = memo(function SortableCandidate({
+// --- Candidate Card (used both for sortable items and drag overlay) ---
+const CandidateCardContent = memo(function CandidateCardContent({
   candidate,
   rank,
-  canMoveUp,
-  canMoveDown,
-  onMove,
+  totalCandidates,
+  onChangeRank,
+  isDragging = false,
+  isOverlay = false,
 }: {
   candidate: CandidateData;
   rank: number;
-  canMoveUp: boolean;
-  canMoveDown: boolean;
-  onMove: (candidateId: number, direction: -1 | 1) => void;
+  totalCandidates: number;
+  onChangeRank?: (candidateId: number, newRank: number) => void;
+  isDragging?: boolean;
+  isOverlay?: boolean;
 }) {
-  const {
-    attributes,
-    listeners,
-    setActivatorNodeRef,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: candidate.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition: isDragging ? "none" : transition,
-    opacity: isDragging ? 0.96 : 1,
-    zIndex: isDragging ? 100 : "auto" as const,
-  };
-
   const getRankClass = (r: number) => {
     if (r === 1) return "rank-badge rank-badge--1";
     if (r === 2) return "rank-badge rank-badge--2";
@@ -84,22 +71,10 @@ const SortableCandidate = memo(function SortableCandidate({
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      className={`candidate-card ${isDragging ? "dragging" : ""}`}
+      className={`candidate-card ${isDragging ? "dragging" : ""} ${isOverlay ? "drag-overlay" : ""}`}
+      style={isOverlay ? { boxShadow: "0 20px 60px rgba(0,0,0,0.25)", cursor: "grabbing" } : undefined}
     >
-      <div
-        ref={setActivatorNodeRef}
-        className="candidate-card__drag-handle"
-        title="Drag to reorder"
-        {...attributes}
-        {...listeners}
-      >
-        <span />
-        <span />
-        <span />
-      </div>
-      <div className={getRankClass(rank)}>{rank}</div>
+      <div className="candidate-card__rank-col">{getRankClass(rank) && <div className={getRankClass(rank)}>{rank}</div>}</div>
       <div className="candidate-card__info">
         <div className="candidate-card__name">{candidate.name}</div>
         {candidate.class && (
@@ -109,31 +84,77 @@ const SortableCandidate = memo(function SortableCandidate({
           </div>
         )}
       </div>
-      <div className="candidate-card__actions" onPointerDown={(e) => e.stopPropagation()}>
-        <button
-          type="button"
-          className="rank-move-button"
-          aria-label={`Move ${candidate.name} up`}
-          title="Move up"
-          disabled={!canMoveUp}
-          onClick={() => onMove(candidate.id, -1)}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 15l-6-6-6 6" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          className="rank-move-button"
-          aria-label={`Move ${candidate.name} down`}
-          title="Move down"
-          disabled={!canMoveDown}
-          onClick={() => onMove(candidate.id, 1)}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
+      {!isOverlay && onChangeRank && (
+        <div className="candidate-card__actions" onPointerDown={(e) => e.stopPropagation()}>
+          <input
+            type="number"
+            className="rank-input form-input"
+            min={1}
+            max={totalCandidates}
+            value={rank}
+            onChange={(e) => {
+              const val = parseInt(e.target.value, 10);
+              if (!isNaN(val) && val >= 1 && val <= totalCandidates) {
+                onChangeRank(candidate.id, val);
+              }
+            }}
+            style={{ width: "4rem", textAlign: "center", padding: "8px 4px", fontSize: "0.875rem" }}
+          />
+        </div>
+      )}
+    </div>
+  );
+});
+
+// --- Sortable Candidate Card ---
+const SortableCandidate = memo(function SortableCandidate({
+  candidate,
+  rank,
+  totalCandidates,
+  onChangeRank,
+}: {
+  candidate: CandidateData;
+  rank: number;
+  totalCandidates: number;
+  onChangeRank: (candidateId: number, newRank: number) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: candidate.id });
+
+  // Manually construct translate3d to prevent any scaling/offset issues
+  const style: React.CSSProperties = {
+    transform: transform ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)` : undefined,
+    transition: isDragging ? undefined : transition,
+    opacity: isDragging ? 0.3 : 1,
+    willChange: "transform",
+    position: "relative",
+    zIndex: isDragging ? 999 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+    >
+      {/* The drag handle wraps the whole card */}
+      <div
+        {...attributes}
+        {...listeners}
+        style={{ touchAction: "none", cursor: isDragging ? "grabbing" : "grab" }}
+      >
+        <CandidateCardContent
+          candidate={candidate}
+          rank={rank}
+          totalCandidates={totalCandidates}
+          onChangeRank={onChangeRank}
+          isDragging={isDragging}
+        />
       </div>
     </div>
   );
@@ -149,8 +170,15 @@ function PositionRanking({
   rankings: number[];
   onRankingsChange: (positionId: number, rankings: number[]) => void;
 }) {
+  const [activeId, setActiveId] = useState<number | null>(null);
+
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 1 } }),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        // Very small distance so drag starts instantly
+        distance: 3,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -160,7 +188,17 @@ function PositionRanking({
     .map((id) => position.candidates.find((c) => c.id === id))
     .filter(Boolean) as CandidateData[];
 
+  const activeCandidate = activeId
+    ? orderedCandidates.find((c) => c.id === activeId) ?? null
+    : null;
+  const activeRank = activeId ? rankings.indexOf(activeId) + 1 : 0;
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as number);
+  }
+
   function handleDragEnd(event: DragEndEvent) {
+    setActiveId(null);
     const { active, over } = event;
     if (over && active.id !== over.id) {
       const oldIndex = rankings.indexOf(active.id as number);
@@ -170,10 +208,10 @@ function PositionRanking({
     }
   }
 
-  const handleMoveCandidate = useCallback(
-    (candidateId: number, direction: -1 | 1) => {
+  const handleChangeRank = useCallback(
+    (candidateId: number, newRank: number) => {
       const currentIndex = rankings.indexOf(candidateId);
-      const nextIndex = currentIndex + direction;
+      const nextIndex = newRank - 1; // 1-indexed to 0-indexed
 
       if (currentIndex < 0 || nextIndex < 0 || nextIndex >= rankings.length) {
         return;
@@ -209,12 +247,13 @@ function PositionRanking({
           fontStyle: "italic",
         }}
       >
-        Drag to reorder. Top = 1st choice.
+        Drag cards or type a number to reorder. Top = 1st choice.
       </p>
 
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={rankings} strategy={verticalListSortingStrategy}>
@@ -224,13 +263,24 @@ function PositionRanking({
                 key={candidate.id}
                 candidate={candidate}
                 rank={index + 1}
-                canMoveUp={index > 0}
-                canMoveDown={index < orderedCandidates.length - 1}
-                onMove={handleMoveCandidate}
+                totalCandidates={orderedCandidates.length}
+                onChangeRank={handleChangeRank}
               />
             ))}
           </div>
         </SortableContext>
+
+        {/* DragOverlay renders outside the list, so no layout shifting */}
+        <DragOverlay dropAnimation={null}>
+          {activeCandidate ? (
+            <CandidateCardContent
+              candidate={activeCandidate}
+              rank={activeRank}
+              totalCandidates={orderedCandidates.length}
+              isOverlay
+            />
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </div>
   );
@@ -251,6 +301,7 @@ export default function VotePage() {
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
+  // No greeting popup — go straight to voting
 
   // Load voter info and positions
   useEffect(() => {
@@ -384,31 +435,30 @@ export default function VotePage() {
     );
   }
 
+  const votablePositions = positions.filter((p) => p.isVotable && p.candidates.length > 0);
+  const suggestablePositions = positions.filter((p) => p.isSuggestable);
+
+  // Deduplicate candidates for suggestions (same name, class, section)
+  const allCandidates = positions.flatMap((p) => p.candidates);
+  const uniqueCandidates = allCandidates.filter(
+    (c, i, arr) => arr.findIndex((t) => t.name === c.name && t.class === c.class && t.section === c.section) === i
+  );
+
+  if (votablePositions.length === 0) {
+    return (
+      <div className="page-wrapper" ref={containerRef}>
+        <div className="center-card glass-card" style={{ textAlign: "center" }}>
+          <h2>No Positions Available</h2>
+          <p>There are no positions available for voting right now.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-wrapper" ref={containerRef} style={{ justifyContent: "flex-start", paddingTop: "var(--space-3xl)" }}>
       <div className="content-wrapper" style={{ maxWidth: 640 }}>
-        {/* Greeting Popup */}
-        {showGreeting && voterInfo && (
-          <div className="greeting" style={{ paddingTop: "20vh" }}>
-            <div className="greeting__wave">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v4M18.5 12c-.83 0-1.5-.67-1.5-1.5v-3c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v4M22.5 14c-.83 0-1.5-.67-1.5-1.5v-1c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v3M10.5 11c-.83 0-1.5-.67-1.5-1.5v-7c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v6" />
-                <path d="M5.5 13.5V11c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v4" />
-                <path d="M15.5 22H8.5a4 4 0 0 1-4-4v-4.5a2.5 2.5 0 0 1 5 0V15h11a2.5 2.5 0 0 1-5 0V11M2.5 13.5a2.5 2.5 0 0 1 5 0" />
-              </svg>
-            </div>
-            <h2 className="greeting__text">
-              Hey <span className="greeting__name">{voterInfo.name.split(" ")[0]}</span>!
-            </h2>
-            <p className="greeting__sub">
-              Welcome to the Student Cabinet Elections
-            </p>
-          </div>
-        )}
-
-        {/* Voting Content */}
-        {!showGreeting && (
-          <>
+        {/* Voting Content — shown immediately, no greeting popup */}
             {/* Header */}
             <div style={{ marginBottom: "var(--space-2xl)" }}>
               <p className="tagline mb-sm">Student Cabinet Elections</p>
@@ -419,8 +469,7 @@ export default function VotePage() {
                 </span>
               </h2>
               <p className="mt-sm" style={{ fontSize: "0.9rem" }}>
-                Drag candidates to rank them by preference. Your 1st choice
-                matters most.
+                Drag or use the arrow buttons to rank candidates by preference. Your 1st choice matters most.
               </p>
             </div>
 
@@ -436,7 +485,7 @@ export default function VotePage() {
             )}
 
             {/* Position Rankings */}
-            {positions.map((position) => (
+            {votablePositions.map((position) => (
               <PositionRanking
                 key={position.id}
                 position={position}
@@ -446,7 +495,8 @@ export default function VotePage() {
             ))}
 
             {/* Suggestions Section */}
-            <div className="position-section mb-2xl">
+            {suggestablePositions.length > 0 && (
+              <div className="position-section mb-2xl">
               <h3 style={{ marginBottom: "var(--space-sm)" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -476,8 +526,7 @@ export default function VotePage() {
                 Recommend specific candidates for specific positions.
               </p>
 
-              {positions.flatMap((pos) =>
-                pos.candidates.map((candidate) => (
+              {uniqueCandidates.map((candidate) => (
                   <div
                     key={`sug-${candidate.id}`}
                     style={{
@@ -530,7 +579,7 @@ export default function VotePage() {
                       }}
                     >
                       <option value="">No suggestion</option>
-                      {positions.map((p) => (
+                      {suggestablePositions.map((p) => (
                         <option key={p.id} value={p.title}>
                           {p.title}
                         </option>
@@ -538,8 +587,9 @@ export default function VotePage() {
                     </select>
                   </div>
                 ))
-              )}
+              }
             </div>
+            )}
 
             {/* Submit Area */}
             <div className="vote-submit-area" style={{ textAlign: "center", paddingBottom: "var(--space-3xl)" }}>
@@ -561,8 +611,6 @@ export default function VotePage() {
                 You can only vote once. Make sure your rankings are final.
               </p>
             </div>
-          </>
-        )}
       </div>
 
       {/* Confirmation Modal */}

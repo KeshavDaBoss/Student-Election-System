@@ -2,10 +2,6 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
-
-gsap.registerPlugin(useGSAP);
 
 // Class options for APS Bolarum
 const CLASS_OPTIONS = ["6", "7", "8", "9", "10", "11", "12"];
@@ -50,65 +46,25 @@ export default function LoginPage() {
     return () => clearInterval(interval);
   }, [lockedUntil]);
 
-  // GSAP entrance animations
-  useGSAP(
-    () => {
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-
-      tl.from(logoRef.current, {
-        y: -30,
-        opacity: 0,
-        duration: 0.8,
-      })
-        .from(
-          ".login-title",
-          {
-            y: 20,
-            opacity: 0,
-            duration: 0.6,
-          },
-          "-=0.4"
-        )
-        .from(
-          ".login-tagline",
-          {
-            y: 15,
-            opacity: 0,
-            duration: 0.5,
-          },
-          "-=0.3"
-        )
-        .from(
-          ".form-group",
-          {
-            y: 25,
-            opacity: 0,
-            duration: 0.5,
-            stagger: 0.1,
-          },
-          "-=0.2"
-        )
-        .from(
-          ".login-submit",
-          {
-            y: 20,
-            opacity: 0,
-            scale: 0.95,
-            duration: 0.5,
-          },
-          "-=0.1"
-        )
-        .from(
-          ".login-footer",
-          {
-            opacity: 0,
-            duration: 0.4,
-          },
-          "-=0.2"
-        );
-    },
-    { scope: containerRef }
-  );
+  // Fetch initial rate limit status on mount
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch("/api/auth/login/status");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.isLocked) {
+            setLockedUntil(data.lockedUntil);
+            setError(`Too many failed attempts. Try again in ${data.lockedUntil}`); // timer will update this immediately
+          }
+          setAttemptsLeft(data.attemptsLeft);
+        }
+      } catch (err) {
+        console.error("Failed to fetch rate limit status", err);
+      }
+    };
+    fetchStatus();
+  }, []);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -116,29 +72,13 @@ export default function LoginPage() {
       setError("");
 
       // Client-side validation
-      if (!electionNumber || electionNumber.length !== 6) {
-        setError("Election Number must be exactly 6 characters.");
-        // Shake animation
-        gsap.to(formRef.current, {
-          x: [-10, 10, -8, 8, -4, 4, 0],
-          duration: 0.5,
-          ease: "power2.out",
-        });
+      if (!electionNumber || !selectedClass || !selectedSection) {
+        setError("Please fill in all fields.");
         return;
       }
 
       if (!/^[0-9A-Za-z]{6}$/.test(electionNumber)) {
-        setError("Election Number must be alphanumeric (letters and numbers only).");
-        gsap.to(formRef.current, {
-          x: [-10, 10, -8, 8, -4, 4, 0],
-          duration: 0.5,
-          ease: "power2.out",
-        });
-        return;
-      }
-
-      if (!selectedClass || !selectedSection) {
-        setError("Please select your Class and Section.");
+        setError("Invalid Election Number format (must be 6 alphanumeric characters).");
         return;
       }
 
@@ -161,39 +101,26 @@ export default function LoginPage() {
 
         const data = await res.json();
 
-        if (!res.ok) {
-          setError(data.error || "Login failed. Please try again.");
-
+        if (res.status === 401) {
+          setError(data.error || "Invalid credentials.");
           if (data.attemptsLeft !== undefined) {
             setAttemptsLeft(data.attemptsLeft);
           }
-
+        } else if (res.status === 429) {
+          setError(data.error || "Too many attempts.");
           if (data.lockedUntil) {
             setLockedUntil(data.lockedUntil);
+            setAttemptsLeft(0);
           }
+        } else if (!res.ok) {
+          setError(data.error || "An error occurred during login.");
+        } else {
+          // Success — store token and redirect
+          document.cookie = `ses_token=${data.token}; path=/; max-age=3600; SameSite=Strict`;
 
-          // Shake animation on error
-          gsap.to(formRef.current, {
-            x: [-10, 10, -8, 8, -4, 4, 0],
-            duration: 0.5,
-            ease: "power2.out",
-          });
-
-          return;
+          router.push("/vote");
         }
 
-        // Success — store token and redirect
-        document.cookie = `ses_token=${data.token}; path=/; max-age=3600; SameSite=Strict`;
-
-        // Success animation before redirect
-        gsap.to(formRef.current, {
-          scale: 0.98,
-          opacity: 0.8,
-          duration: 0.3,
-          onComplete: () => {
-            router.push("/vote");
-          },
-        });
       } catch {
         setError("Network error. Please check your connection.");
       } finally {
@@ -390,32 +317,6 @@ export default function LoginPage() {
           </form>
         </div>
 
-        {/* Footer */}
-        <div
-          className="login-footer"
-          style={{
-            textAlign: "center",
-            marginTop: "var(--space-xl)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--space-sm)",
-          }}
-        >
-          <p style={{ fontSize: "0.8125rem", color: "var(--gray-500)" }}>
-            Army Public School Bolarum
-          </p>
-          <a
-            href="/admin/login"
-            style={{
-              fontSize: "0.8125rem",
-              color: "var(--gray-400)",
-              textDecoration: "underline",
-              textUnderlineOffset: "3px",
-            }}
-          >
-            Admin Access →
-          </a>
-        </div>
       </div>
     </div>
   );

@@ -34,7 +34,8 @@ export const positions = pgTable("positions", {
   title: text("title").notNull(),
   description: text("description"),
   numWinners: integer("num_winners").notNull().default(1),
-  isActive: boolean("is_active").notNull().default(true),
+  isVotable: boolean("is_votable").notNull().default(true),
+  isSuggestable: boolean("is_suggestable").notNull().default(false),
   displayOrder: integer("display_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

@@ -125,10 +125,7 @@ export async function POST(request: NextRequest) {
       const positionId = parseInt(positionIdStr, 10);
 
       if (!Array.isArray(candidateRankings) || candidateRankings.length === 0) {
-        return NextResponse.json(
-          { error: `Invalid rankings for position ${positionId}` },
-          { status: 400 }
-        );
+        continue;
       }
 
       // Verify position exists

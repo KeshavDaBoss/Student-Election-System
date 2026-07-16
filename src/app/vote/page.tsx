@@ -375,13 +375,17 @@ export default function VotePage() {
         .find((c) => c.startsWith("ses_token="))
         ?.split("=")[1];
 
+      const filteredRankings = Object.fromEntries(
+        Object.entries(rankings).filter(([, r]) => Array.isArray(r) && r.length > 0)
+      );
+
       const res = await fetch("/api/vote", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ rankings, suggestions }),
+        body: JSON.stringify({ rankings: filteredRankings, suggestions }),
       });
 
       if (!res.ok) {

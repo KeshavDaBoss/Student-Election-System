@@ -224,45 +224,47 @@ export default function AdminCandidatesPage() {
               </div>
             </div>
 
-            {position.candidates.length > 0 ? (
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Class & Section</th>
-                      <th style={{ textAlign: "right" }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {position.candidates.map((c) => (
-                      <tr key={c.id}>
-                        <td style={{ fontWeight: 500 }}>{c.name}</td>
-                        <td>{c.class ? `${c.class}-${c.section}` : "-"}</td>
-                        <td style={{ textAlign: "right" }}>
-                          <button 
-                            className="btn btn-ghost" style={{ padding: "4px 8px", fontSize: "0.875rem" }}
-                            onClick={() => { setEditingCandidate(c); setShowCandidateModal(true); }}
-                          >
-                            Edit
-                          </button>
-                          <button 
-                            className="btn btn-ghost" style={{ padding: "4px 8px", fontSize: "0.875rem", color: "var(--error)" }}
-                            onClick={() => deleteCandidate(c.id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div style={{ padding: "var(--space-lg)", textAlign: "center", background: "var(--gray-50)", borderRadius: "var(--radius-md)" }}>
-                <p style={{ color: "var(--gray-500)", fontSize: "0.875rem" }}>No candidates added yet.</p>
-              </div>
-            )}
+             {(position.isVotable || position.candidates.length > 0) && (
+               <div style={{ padding: "var(--space-lg)", textAlign: "center", background: "var(--gray-50)", borderRadius: "var(--radius-md)" }}>
+                 {position.candidates.length > 0 ? (
+                   <div className="table-container">
+                     <table className="table">
+                       <thead>
+                         <tr>
+                           <th>Name</th>
+                           <th>Class & Section</th>
+                           <th style={{ textAlign: "right" }}>Actions</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {position.candidates.map((c) => (
+                           <tr key={c.id}>
+                             <td style={{ fontWeight: 500 }}>{c.name}</td>
+                             <td>{c.class ? `${c.class}-${c.section}` : "-"}</td>
+                             <td style={{ textAlign: "right" }}>
+                               <button 
+                                 className="btn btn-ghost" style={{ padding: "4px 8px", fontSize: "0.875rem" }}
+                                 onClick={() => { setEditingCandidate(c); setShowCandidateModal(true); }}
+                               >
+                                 Edit
+                               </button>
+                               <button 
+                                 className="btn btn-ghost" style={{ padding: "4px 8px", fontSize: "0.875rem", color: "var(--error)" }}
+                                 onClick={() => deleteCandidate(c.id)}
+                               >
+                                 Delete
+                               </button>
+                             </td>
+                           </tr>
+                         ))}
+                       </tbody>
+                     </table>
+                   </div>
+                 ) : (
+                   <p style={{ color: "var(--gray-500)", fontSize: "0.875rem" }}>No candidates added yet.</p>
+                 )}
+               </div>
+             )}
           </div>
         ))}
       </div>

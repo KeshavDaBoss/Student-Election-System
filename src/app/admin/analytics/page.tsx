@@ -76,8 +76,8 @@ export default function AdminAnalyticsPage() {
   }
 
   return (
-    <div ref={containerRef} style={{ width: "100%", maxWidth: "100vw", overflowX: "hidden", boxSizing: "border-box" }}>
-      <div className="section-header" style={{ maxWidth: "100%" }}>
+    <div ref={containerRef}>
+      <div className="section-header">
         <div>
           <h1 className="section-title">Election Analytics</h1>
           <p className="section-subtitle">Real-time ranked-choice voting results</p>
@@ -85,7 +85,7 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {analytics.map((race) => (
-        <div key={race.positionId} className="glass-card analytics-card mb-2xl" style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", boxSizing: "border-box" }}>
+        <div key={race.positionId} className="glass-card analytics-card mb-2xl">
           <div className="section-header" style={{ marginBottom: "var(--space-md)" }}>
             <h2 style={{ fontSize: "1.5rem" }}>{race.positionTitle}</h2>
             <div className="badge badge--orange">

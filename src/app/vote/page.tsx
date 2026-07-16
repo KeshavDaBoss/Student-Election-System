@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { memo, useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -45,20 +45,33 @@ interface VoterInfo {
 }
 
 // --- Sortable Candidate Card ---
-function SortableCandidate({
+const SortableCandidate = memo(function SortableCandidate({
   candidate,
   rank,
+  canMoveUp,
+  canMoveDown,
+  onMove,
 }: {
   candidate: CandidateData;
   rank: number;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMove: (candidateId: number, direction: -1 | 1) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: candidate.id });
+  const {
+    attributes,
+    listeners,
+    setActivatorNodeRef,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: candidate.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: isDragging ? "none" : transition,
+    opacity: isDragging ? 0.96 : 1,
     zIndex: isDragging ? 100 : "auto" as const,
   };
 
@@ -74,10 +87,14 @@ function SortableCandidate({
       ref={setNodeRef}
       style={style}
       className={`candidate-card ${isDragging ? "dragging" : ""}`}
-      {...attributes}
-      {...listeners}
     >
-      <div className="candidate-card__drag-handle">
+      <div
+        ref={setActivatorNodeRef}
+        className="candidate-card__drag-handle"
+        title="Drag to reorder"
+        {...attributes}
+        {...listeners}
+      >
         <span />
         <span />
         <span />
@@ -92,9 +109,35 @@ function SortableCandidate({
           </div>
         )}
       </div>
+      <div className="candidate-card__actions" onPointerDown={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          className="rank-move-button"
+          aria-label={`Move ${candidate.name} up`}
+          title="Move up"
+          disabled={!canMoveUp}
+          onClick={() => onMove(candidate.id, -1)}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 15l-6-6-6 6" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className="rank-move-button"
+          aria-label={`Move ${candidate.name} down`}
+          title="Move down"
+          disabled={!canMoveDown}
+          onClick={() => onMove(candidate.id, 1)}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
-}
+});
 
 // --- Position Ranking Section ---
 function PositionRanking({
@@ -107,7 +150,7 @@ function PositionRanking({
   onRankingsChange: (positionId: number, rankings: number[]) => void;
 }) {
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, { activationConstraint: { distance: 1 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -126,6 +169,23 @@ function PositionRanking({
       onRankingsChange(position.id, newRankings);
     }
   }
+
+  const handleMoveCandidate = useCallback(
+    (candidateId: number, direction: -1 | 1) => {
+      const currentIndex = rankings.indexOf(candidateId);
+      const nextIndex = currentIndex + direction;
+
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= rankings.length) {
+        return;
+      }
+
+      onRankingsChange(
+        position.id,
+        arrayMove(rankings, currentIndex, nextIndex)
+      );
+    },
+    [onRankingsChange, position.id, rankings]
+  );
 
   return (
     <div className="position-section mb-2xl">
@@ -164,6 +224,9 @@ function PositionRanking({
                 key={candidate.id}
                 candidate={candidate}
                 rank={index + 1}
+                canMoveUp={index > 0}
+                canMoveDown={index < orderedCandidates.length - 1}
+                onMove={handleMoveCandidate}
               />
             ))}
           </div>
@@ -186,7 +249,6 @@ export default function VotePage() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [showGreeting, setShowGreeting] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
 
@@ -240,48 +302,10 @@ export default function VotePage() {
     load();
   }, [router]);
 
-  // Greeting animation
-  useGSAP(
-    () => {
-      if (!showGreeting || !voterInfo) return;
-
-      const tl = gsap.timeline();
-      tl.from(".greeting__wave", {
-        scale: 0,
-        rotation: -30,
-        duration: 0.6,
-        ease: "back.out(1.7)",
-      })
-        .from(
-          ".greeting__text",
-          { y: 20, opacity: 0, duration: 0.5 },
-          "-=0.2"
-        )
-        .from(
-          ".greeting__sub",
-          { y: 15, opacity: 0, duration: 0.4 },
-          "-=0.2"
-        );
-
-      // Auto-dismiss after 2.5 seconds
-      const timeout = setTimeout(() => {
-        gsap.to(".greeting", {
-          y: -20,
-          opacity: 0,
-          duration: 0.4,
-          onComplete: () => setShowGreeting(false),
-        });
-      }, 2500);
-
-      return () => clearTimeout(timeout);
-    },
-    { scope: containerRef, dependencies: [voterInfo, showGreeting] }
-  );
-
   // Content entrance animation
   useGSAP(
     () => {
-      if (showGreeting || loading) return;
+      if (loading) return;
 
       gsap.from(".position-section", {
         y: 30,
@@ -299,7 +323,7 @@ export default function VotePage() {
         ease: "power3.out",
       });
     },
-    { scope: containerRef, dependencies: [showGreeting, loading] }
+    { scope: containerRef, dependencies: [loading] }
   );
 
   const handleRankingsChange = useCallback(

@@ -7,6 +7,10 @@ export async function middleware(request: NextRequest) {
 
   // Protect /vote routes
   if (pathname.startsWith("/vote")) {
+    if (pathname === "/vote/success") {
+      return NextResponse.next();
+    }
+
     const token = request.cookies.get("ses_token")?.value;
     
     if (!token) {

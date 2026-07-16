@@ -61,6 +61,8 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminRole, setAdminRole] = useState("");
 
   // Skip auth check on admin login page
   const isLoginPage = pathname === "/admin/login";
@@ -83,6 +85,34 @@ export default function AdminLayout({
       setAuthorized(true);
     }
   }, [isLoginPage, router]);
+
+  useEffect(() => {
+    if (isLoginPage || !authorized) return;
+
+    async function loadAdmin() {
+      try {
+        const token = document.cookie
+          .split(";")
+          .map((c) => c.trim())
+          .find((c) => c.startsWith("ses_admin_token="))
+          ?.split("=")[1];
+
+        const res = await fetch("/api/admin/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setAdminEmail(data.email);
+          setAdminRole(data.role);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    loadAdmin();
+  }, [isLoginPage, authorized]);
 
   if (!authorized) {
     return (
@@ -145,6 +175,54 @@ export default function AdminLayout({
         </nav>
 
         <div style={{ marginTop: "auto", paddingTop: "var(--space-lg)" }}>
+          {adminEmail && (
+            <div
+              style={{
+                padding: "var(--space-sm) var(--space-md)",
+                marginBottom: "var(--space-sm)",
+                borderRadius: "var(--radius-sm)",
+                background: "var(--gray-100)",
+                border: "1px solid var(--gray-200)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  color: "var(--gray-500)",
+                  marginBottom: "2px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Signed in as
+              </div>
+              <div
+                style={{
+                  fontSize: "0.8125rem",
+                  color: "var(--gray-900)",
+                  fontWeight: 500,
+                  wordBreak: "break-all",
+                }}
+              >
+                {adminEmail}
+              </div>
+              {adminRole === "superadmin" && (
+                <div
+                  style={{
+                    fontSize: "0.6875rem",
+                    color: "var(--orange-600)",
+                    fontWeight: 600,
+                    marginTop: "2px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  Super Admin
+                </div>
+              )}
+            </div>
+          )}
+
           <button
             onClick={handleLogout}
             className="sidebar__link"

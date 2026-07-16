@@ -37,6 +37,9 @@ interface PositionData {
   id: number;
   title: string;
   description?: string;
+  numWinners: number;
+  isVotable: boolean;
+  isSuggestable: boolean;
   candidates: CandidateData[];
 }
 

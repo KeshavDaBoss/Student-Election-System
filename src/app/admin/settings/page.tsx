@@ -27,6 +27,11 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [newAdminEmail, setNewAdminEmail] = useState("");
+  
+  // Reset state
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetEmailConfirm, setResetEmailConfirm] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   const loadData = async () => {
     try {
@@ -130,6 +135,32 @@ export default function AdminSettingsPage() {
       loadData();
     } catch (err) {
       setMessage({ type: "error", text: "Failed to remove admin." });
+    }
+  };
+
+  const handleResetElection = async () => {
+    if (!resetEmailConfirm) return;
+    setResetting(true);
+    try {
+      const token = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ses_admin_token="))?.split("=")[1];
+      const res = await fetch("/api/admin/settings/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ email: resetEmailConfirm }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: "success", text: "Election data has been completely reset." });
+        setShowResetConfirm(false);
+        setResetEmailConfirm("");
+      } else {
+        setMessage({ type: "error", text: data.error || "Failed to reset election." });
+      }
+    } catch (err) {
+      setMessage({ type: "error", text: "Network error." });
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -274,6 +305,53 @@ export default function AdminSettingsPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div className="glass-card page-section" style={{ border: "1px solid var(--error-light)" }}>
+        <h2 className="mb-md" style={{ color: "var(--error)" }}>Danger Zone</h2>
+        <p className="mb-lg" style={{ fontSize: "0.875rem", color: "var(--gray-500)" }}>
+          Resetting the election will permanently delete all votes cast, all student suggestions, and reset every voter's status to "Pending". <strong>This action cannot be undone.</strong>
+        </p>
+        
+        {!showResetConfirm ? (
+          <button 
+            className="btn" 
+            style={{ backgroundColor: "var(--error)", color: "white", borderColor: "var(--error)" }}
+            onClick={() => setShowResetConfirm(true)}
+          >
+            Reset Election Data
+          </button>
+        ) : (
+          <div style={{ background: "var(--error-light)", padding: "var(--space-md)", borderRadius: "var(--radius-md)", border: "1px solid var(--error)" }}>
+            <p style={{ color: "var(--error)", fontWeight: 600, marginBottom: "var(--space-sm)" }}>Are you absolutely sure?</p>
+            <p style={{ fontSize: "0.875rem", marginBottom: "var(--space-md)" }}>Type your admin email address to confirm.</p>
+            <div style={{ display: "flex", gap: "var(--space-sm)" }}>
+              <input 
+                type="email" 
+                className="form-input" 
+                placeholder="Enter your email" 
+                value={resetEmailConfirm}
+                onChange={(e) => setResetEmailConfirm(e.target.value)}
+                style={{ flex: 1, maxWidth: 300, borderColor: "var(--error)" }}
+              />
+              <button 
+                className="btn" 
+                style={{ backgroundColor: "var(--error)", color: "white", borderColor: "var(--error)" }}
+                onClick={handleResetElection}
+                disabled={resetting || !resetEmailConfirm}
+              >
+                {resetting ? "Resetting..." : "Confirm Reset"}
+              </button>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => { setShowResetConfirm(false); setResetEmailConfirm(""); }}
+                disabled={resetting}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

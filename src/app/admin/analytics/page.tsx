@@ -116,9 +116,9 @@ export default function AdminAnalyticsPage() {
             </div>
           )}
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-2xl)" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2xl)" }}>
             {/* 1st Choice Votes Chart */}
-            <div>
+            <div style={{ flex: "1 1 300px", minWidth: 0 }}>
               <h3 className="mb-md" style={{ fontSize: "1.1rem" }}>First-Choice Votes</h3>
               <div className="bar-chart">
                 {Object.entries(race.firstChoiceVotes)
@@ -144,7 +144,7 @@ export default function AdminAnalyticsPage() {
             </div>
 
             {/* Average Position */}
-            <div>
+            <div style={{ flex: "1 1 300px", minWidth: 0 }}>
               <h3 className="mb-md" style={{ fontSize: "1.1rem" }}>Average Rank Position</h3>
               <p style={{ fontSize: "0.8rem", color: "var(--gray-500)", marginBottom: "var(--space-sm)" }}>Lower is better (1.0 = ranked 1st by everyone)</p>
               <div className="table-container">

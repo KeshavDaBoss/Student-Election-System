@@ -4,11 +4,6 @@ import { admins } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
-const PROTECTED_EMAILS = new Set([
-  "keshavprathamyadav@gmail.com",
-  "prathamkeshavyadav@gmail.com",
-]);
-
 export async function POST(request: NextRequest) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -22,8 +17,8 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
     
-    if (PROTECTED_EMAILS.has(normalizedEmail)) {
-      return NextResponse.json({ error: "This email is reserved and already has protected admin access." }, { status: 400 });
+    if (admin.role !== "superadmin") {
+      return NextResponse.json({ error: "Only super-admins can add new admins." }, { status: 403 });
     }
     
     // Check if exists
@@ -53,7 +48,7 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const target = await db.select().from(admins).where(eq(admins.id, id)).limit(1);
-    if (target.length > 0 && PROTECTED_EMAILS.has(target[0].email)) {
+    if (target.length > 0 && target[0].isProtected) {
       return NextResponse.json({ error: "Cannot delete a protected admin" }, { status: 400 });
     }
 

@@ -2,6 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "../src/db/schema";
 import { config } from "dotenv";
+import { eq } from "drizzle-orm";
 
 config({ path: ".env.local" });
 
@@ -28,14 +29,20 @@ async function seed() {
     let addedCount = 0;
     for (const email of protectedAdmins) {
       if (!existingEmails.has(email)) {
-        await db.insert(schema.admins).values({ email, isProtected: true });
+        await db.insert(schema.admins).values({ email, isProtected: true, role: "superadmin" });
         console.log(`Adding protected admin: ${email}`);
         addedCount++;
+      } else {
+        const [existing] = await db.select().from(schema.admins).where(eq(schema.admins.email, email)).limit(1);
+        if (existing && existing.role !== "superadmin") {
+          await db.update(schema.admins).set({ role: "superadmin" }).where(eq(schema.admins.email, email));
+          console.log(`Updating protected admin role: ${email}`);
+        }
       }
     }
 
     if (addedCount === 0) {
-      console.log("Protected admins already exist, skipping.");
+      console.log("Protected admins already exist, skipping additions.");
     }
 
     const config = await db.select().from(schema.electionConfig);

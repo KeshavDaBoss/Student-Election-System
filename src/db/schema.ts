@@ -85,6 +85,7 @@ export const admins = pgTable("admins", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
   isProtected: boolean("is_protected").notNull().default(false),
+  role: text("role").notNull().default("admin"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

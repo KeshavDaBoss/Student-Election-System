@@ -4,11 +4,6 @@ import { electionConfig, admins } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
-const PROTECTED_EMAILS = new Set([
-  "keshavprathamyadav@gmail.com",
-  "prathamkeshavyadav@gmail.com",
-]);
-
 export async function GET(request: NextRequest) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,7 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     const adminList = await db.select().from(admins).orderBy(admins.email);
-    const filteredAdmins = adminList.filter(a => !PROTECTED_EMAILS.has(a.email));
+    const filteredAdmins = adminList.filter(a => !a.isProtected);
 
     return NextResponse.json({ config: configs[0], admins: filteredAdmins });
   } catch (error) {

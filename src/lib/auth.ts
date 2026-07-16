@@ -17,6 +17,7 @@ export interface AdminPayload extends JWTPayload {
   type: "admin";
   email: string;
   adminId: number;
+  role: "admin" | "superadmin";
 }
 
 export type TokenPayload = VoterPayload | AdminPayload;

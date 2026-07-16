@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
       type: "admin",
       email: admin.email,
       adminId: admin.id,
+      role: admin.role || "admin",
     });
 
     return NextResponse.json({ token });

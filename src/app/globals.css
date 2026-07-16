@@ -503,9 +503,7 @@ a:hover {
 }
 
 .candidate-card.dragging {
-  opacity: 0.35;
   border-color: var(--orange-300);
-  box-shadow: none;
   cursor: grabbing;
 }
 

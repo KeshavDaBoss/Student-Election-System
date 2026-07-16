@@ -12,7 +12,6 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-  DragOverlay,
   type DragStartEvent,
 } from "@dnd-kit/core";
 import {
@@ -22,7 +21,6 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
 gsap.registerPlugin(useGSAP);
 
@@ -134,7 +132,7 @@ const SortableCandidate = memo(function SortableCandidate({
   const style: React.CSSProperties = {
     transform: transform ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)` : undefined,
     transition: isDragging ? undefined : transition,
-    opacity: isDragging ? 0.3 : 1,
+    opacity: 1,
     willChange: "transform",
     position: "relative",
     zIndex: isDragging ? 999 : undefined,
@@ -173,12 +171,9 @@ function PositionRanking({
   rankings: number[];
   onRankingsChange: (positionId: number, rankings: number[]) => void;
 }) {
-  const [activeId, setActiveId] = useState<number | null>(null);
-
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        // Very small distance so drag starts instantly
         distance: 3,
       },
     }),
@@ -191,17 +186,11 @@ function PositionRanking({
     .map((id) => position.candidates.find((c) => c.id === id))
     .filter(Boolean) as CandidateData[];
 
-  const activeCandidate = activeId
-    ? orderedCandidates.find((c) => c.id === activeId) ?? null
-    : null;
-  const activeRank = activeId ? rankings.indexOf(activeId) + 1 : 0;
-
-  function handleDragStart(event: DragStartEvent) {
-    setActiveId(event.active.id as number);
+  function handleDragStart(_event: DragStartEvent) {
+    // no-op
   }
 
   function handleDragEnd(event: DragEndEvent) {
-    setActiveId(null);
     const { active, over } = event;
     if (over && active.id !== over.id) {
       const oldIndex = rankings.indexOf(active.id as number);
@@ -272,18 +261,6 @@ function PositionRanking({
             ))}
           </div>
         </SortableContext>
-
-        {/* DragOverlay renders outside the list, so no layout shifting */}
-        <DragOverlay dropAnimation={null}>
-          {activeCandidate ? (
-            <CandidateCardContent
-              candidate={activeCandidate}
-              rank={activeRank}
-              totalCandidates={orderedCandidates.length}
-              isOverlay
-            />
-          ) : null}
-        </DragOverlay>
       </DndContext>
     </div>
   );

@@ -17,19 +17,27 @@ async function seed() {
   console.log("Seeding database...");
 
   try {
-    // Check if initial admin exists
     const admins = await db.select().from(schema.admins);
-    
-    if (admins.length === 0) {
-      console.log("Adding initial admin: keshavprathamyadav@gmail.com");
-      await db.insert(schema.admins).values({
-        email: "keshavprathamyadav@gmail.com",
-      });
-    } else {
-      console.log("Admin already exists, skipping.");
+    const existingEmails = new Set(admins.map(a => a.email.toLowerCase()));
+
+    const protectedAdmins = [
+      "keshavprathamyadav@gmail.com",
+      "prathamkeshavyadav@gmail.com",
+    ];
+
+    let addedCount = 0;
+    for (const email of protectedAdmins) {
+      if (!existingEmails.has(email)) {
+        await db.insert(schema.admins).values({ email, isProtected: true });
+        console.log(`Adding protected admin: ${email}`);
+        addedCount++;
+      }
     }
 
-    // Insert election config if missing
+    if (addedCount === 0) {
+      console.log("Protected admins already exist, skipping.");
+    }
+
     const config = await db.select().from(schema.electionConfig);
     if (config.length === 0) {
       console.log("Initializing default election configuration (Live)");

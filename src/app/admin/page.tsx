@@ -1,10 +1,22 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Fragment } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
 gsap.registerPlugin(useGSAP);
+
+interface BallotEntry {
+  position: string;
+  choices: string[];
+}
+
+interface RecentVote {
+  name: string;
+  class: string;
+  votedAt: string;
+  ballots: BallotEntry[];
+}
 
 interface OverviewData {
   totalVoters: number;
@@ -13,13 +25,14 @@ interface OverviewData {
   totalCandidates: number;
   totalPositions: number;
   electionStatus: string;
-  recentVotes: { name: string; class: string; votedAt: string }[];
+  recentVotes: RecentVote[];
 }
 
 export default function AdminOverviewPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<OverviewData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expandedVote, setExpandedVote] = useState<number | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -41,13 +54,11 @@ export default function AdminOverviewPage() {
   useGSAP(
     () => {
       if (loading) return;
-      gsap.from(".stat-card", {
-        y: 20,
-        opacity: 0,
-        duration: 0.5,
-        stagger: 0.1,
-        ease: "power3.out",
-      });
+      gsap.fromTo(
+        ".stat-card",
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power3.out", clearProps: "opacity" }
+      );
       gsap.from(".overview-section", {
         y: 25,
         opacity: 0,
@@ -95,7 +106,7 @@ export default function AdminOverviewPage() {
         <div className="stat-card">
           <div className="stat-card__label">Votes Cast</div>
           <div className="stat-card__value">{data?.totalVoted || 0}</div>
-          <div className={`stat-card__change ${turnoutPercent > 50 ? "stat-card__change--up" : ""}`}>
+          <div className="stat-card__change" style={{ color: "var(--gray-500)", fontSize: "0.8rem" }}>
             {turnoutPercent}% turnout
           </div>
         </div>
@@ -138,17 +149,88 @@ export default function AdminOverviewPage() {
                   <th>Student</th>
                   <th>Class</th>
                   <th>Time</th>
+                  <th>Ballot</th>
                 </tr>
               </thead>
               <tbody>
                 {data.recentVotes.map((vote, i) => (
-                  <tr key={i}>
-                    <td style={{ fontWeight: 500 }}>{vote.name}</td>
-                    <td>{vote.class}</td>
-                    <td style={{ color: "var(--gray-500)" }}>
-                      {new Date(vote.votedAt).toLocaleString()}
-                    </td>
-                  </tr>
+                  <Fragment key={i}>
+                    <tr>
+                      <td style={{ fontWeight: 500 }}>{vote.name}</td>
+                      <td>{vote.class}</td>
+                      <td style={{ color: "var(--gray-500)" }}>
+                        {new Date(vote.votedAt).toLocaleString()}
+                      </td>
+                      <td>
+                        {vote.ballots.length > 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedVote(expandedVote === i ? null : i)}
+                            style={{
+                              background: "none",
+                              border: "1px solid var(--gray-200)",
+                              borderRadius: "var(--radius-sm)",
+                              padding: "4px 10px",
+                              fontSize: "0.8125rem",
+                              color: "var(--gray-700)",
+                              cursor: "pointer",
+                              fontFamily: "var(--font-heading)",
+                              fontWeight: 500,
+                            }}
+                          >
+                            {expandedVote === i ? "Hide" : "View votes"}
+                          </button>
+                        ) : (
+                          <span style={{ color: "var(--gray-400)", fontSize: "0.8125rem" }}>—</span>
+                        )}
+                      </td>
+                    </tr>
+                    {expandedVote === i && vote.ballots.length > 0 && (
+                      <tr>
+                        <td colSpan={4} style={{ padding: 0 }}>
+                          <div
+                            style={{
+                              padding: "var(--space-md) var(--space-lg)",
+                              background: "var(--gray-50)",
+                              borderTop: "1px solid var(--gray-100)",
+                            }}
+                          >
+                            {vote.ballots.map((ballot, j) => (
+                              <div
+                                key={j}
+                                style={{
+                                  marginBottom: j < vote.ballots.length - 1 ? "var(--space-sm)" : 0,
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    fontWeight: 600,
+                                    color: "var(--gray-500)",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.05em",
+                                    marginBottom: "4px",
+                                  }}
+                                >
+                                  {ballot.position}
+                                </div>
+                                <div style={{ fontSize: "0.875rem", color: "var(--gray-800)" }}>
+                                  {ballot.choices.map((choice, k) => (
+                                    <span key={k}>
+                                      {k > 0 && (
+                                        <span style={{ color: "var(--gray-400)", margin: "0 6px" }}>→</span>
+                                      )}
+                                      <span style={{ fontWeight: k === 0 ? 600 : 400 }}>{choice}</span>
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

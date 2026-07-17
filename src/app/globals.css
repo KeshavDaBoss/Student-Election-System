@@ -751,6 +751,7 @@ a:hover {
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   transition: all var(--transition-base);
+  opacity: 1;
 }
 
 .stat-card:hover {

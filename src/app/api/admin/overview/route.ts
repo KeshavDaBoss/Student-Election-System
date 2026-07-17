@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { students, candidates, positions, electionConfig } from "@/db/schema";
+import { students, candidates, positions, electionConfig, votes } from "@/db/schema";
 import { requireClerkAdmin } from "@/lib/clerk-admin";
-import { sql, eq, desc } from "drizzle-orm";
+import { sql, eq, desc, inArray } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   const admin = await requireClerkAdmin();
@@ -63,9 +63,10 @@ export async function GET(request: NextRequest) {
       electionStatus = "live";
     }
 
-    // Recent votes
-    const recentVotes = await db
+    // Recent votes with ballot details
+    const recentVoters = await db
       .select({
+        studentId: students.id,
         name: students.name,
         class: students.class,
         votedAt: students.votedAt,
@@ -74,6 +75,37 @@ export async function GET(request: NextRequest) {
       .where(eq(students.hasVoted, true))
       .orderBy(desc(students.votedAt))
       .limit(5);
+
+    const studentIds = recentVoters.map((v) => v.studentId);
+
+    const [allPositions, allCandidates, studentVotes] = await Promise.all([
+      db.select().from(positions).where(eq(positions.isVotable, true)),
+      db.select().from(candidates),
+      studentIds.length > 0
+        ? db.select().from(votes).where(inArray(votes.studentId, studentIds))
+        : Promise.resolve([]),
+    ]);
+
+    const candidateMap = new Map(allCandidates.map((c) => [c.id, c.name]));
+    const positionMap = new Map(allPositions.map((p) => [p.id, p.title]));
+
+    const recentVotes = recentVoters.map((voter) => {
+      const ballots = studentVotes
+        .filter((v) => v.studentId === voter.studentId)
+        .map((v) => ({
+          position: positionMap.get(v.positionId) ?? "Unknown",
+          choices: (v.rankings as number[]).map(
+            (id) => candidateMap.get(id) ?? `Unknown(${id})`
+          ),
+        }));
+
+      return {
+        name: voter.name,
+        class: voter.class,
+        votedAt: voter.votedAt,
+        ballots,
+      };
+    });
 
     return NextResponse.json({
       totalVoters,

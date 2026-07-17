@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
       name: data.name,
       class: data.class || null,
       section: data.section || null,
+      campaignVideoUrl: data.campaignVideoUrl || null,
     });
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -51,6 +52,7 @@ export async function PUT(request: NextRequest) {
       name: data.name,
       class: data.class || null,
       section: data.section || null,
+      campaignVideoUrl: data.campaignVideoUrl || null,
     }).where(eq(candidates.id, data.id));
     return NextResponse.json({ success: true });
   } catch (error) {

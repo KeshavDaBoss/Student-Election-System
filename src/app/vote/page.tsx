@@ -29,6 +29,7 @@ interface CandidateData {
   name: string;
   class?: string;
   section?: string;
+  campaignVideoUrl?: string | null;
 }
 
 interface PositionData {
@@ -83,6 +84,18 @@ const CandidateCardContent = memo(function CandidateCardContent({
             Class {candidate.class}
             {candidate.section ? ` – Section ${candidate.section}` : ""}
           </div>
+        )}
+        {candidate.campaignVideoUrl && (
+          <a
+            href={candidate.campaignVideoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="candidate-card__video-link"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
+            Watch campaign video
+          </a>
         )}
       </div>
       {!isOverlay && onChangeRank && (

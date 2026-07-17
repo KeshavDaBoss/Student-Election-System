@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
         name: c.name,
         class: c.class,
         section: c.section,
+        campaignVideoUrl: c.campaignVideoUrl,
       })),
     });
   }

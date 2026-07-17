@@ -49,6 +49,7 @@ export const candidates = sqliteTable("candidates", {
   class: text("class"),
   section: text("section"),
   photoUrl: text("photo_url"),
+  campaignVideoUrl: text("campaign_video_url"),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),

@@ -12,6 +12,7 @@ interface Candidate {
   positionId: number;
   class?: string;
   section?: string;
+  campaignVideoUrl?: string;
 }
 
 interface Position {
@@ -107,6 +108,7 @@ export default function AdminCandidatesPage() {
       name: formData.get("name"),
       class: formData.get("class"),
       section: formData.get("section"),
+      campaignVideoUrl: formData.get("campaignVideoUrl"),
     };
 
     try {
@@ -304,7 +306,7 @@ export default function AdminCandidatesPage() {
                 <label className="form-label">Full Name</label>
                 <input name="name" className="form-input" defaultValue={(editingCandidate as Candidate).name || ""} required />
               </div>
-              <div style={{ display: "flex", gap: "var(--space-md)" }} className="mb-xl">
+              <div style={{ display: "flex", gap: "var(--space-md)" }} className="mb-md">
                 <div className="form-group" style={{ flex: 1, textAlign: "left" }}>
                   <label className="form-label">Class</label>
                   <input name="class" className="form-input" defaultValue={(editingCandidate as Candidate).class || ""} />
@@ -313,6 +315,16 @@ export default function AdminCandidatesPage() {
                   <label className="form-label">Section</label>
                   <input name="section" className="form-input" defaultValue={(editingCandidate as Candidate).section || ""} />
                 </div>
+              </div>
+              <div className="form-group mb-xl" style={{ textAlign: "left" }}>
+                <label className="form-label">Campaign video</label>
+                <input
+                  name="campaignVideoUrl"
+                  type="url"
+                  className="form-input"
+                  placeholder="https://youtube.com/watch?v=..."
+                  defaultValue={(editingCandidate as Candidate).campaignVideoUrl || ""}
+                />
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowCandidateModal(false)}>Cancel</button>

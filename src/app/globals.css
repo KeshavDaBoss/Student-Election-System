@@ -556,6 +556,20 @@ a:hover {
   margin-top: 2px;
 }
 
+.candidate-card__video-link {
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--orange-600);
+  margin-top: 4px;
+  text-decoration: none;
+}
+
+.candidate-card__video-link:hover {
+  color: var(--orange-700);
+  text-decoration: underline;
+}
+
 /* Arrow move buttons on candidate cards */
 .candidate-card__actions {
   display: flex;

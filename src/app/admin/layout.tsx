@@ -4,7 +4,8 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth, useClerk, useUser } from "@clerk/nextjs";
+import { useAuth, useClerk } from "@clerk/nextjs";
+import AdminLoginForm from "@/app/admin/login/login-form";
 
 const NAV_ITEMS = [
   {
@@ -61,13 +62,13 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isSignedIn, userId } = useAuth();
-  const { user } = useUser();
+  const { isSignedIn } = useAuth();
   const { signOut } = useClerk();
   const [authorized, setAuthorized] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
   const [adminRole, setAdminRole] = useState("");
   const [checking, setChecking] = useState(true);
+  const [showUnauthorizedLogin, setShowUnauthorizedLogin] = useState(false);
 
   const isLoginPage = pathname === "/admin/login";
 
@@ -75,6 +76,7 @@ export default function AdminLayout({
     if (isLoginPage) {
       setChecking(false);
       setAuthorized(true);
+      setShowUnauthorizedLogin(false);
       return;
     }
 
@@ -82,6 +84,8 @@ export default function AdminLayout({
       router.push("/sign-in");
       return;
     }
+
+    setShowUnauthorizedLogin(false);
 
     async function checkAdmin() {
       try {
@@ -108,12 +112,16 @@ export default function AdminLayout({
   useEffect(() => {
     if (!checking && !authorized && !isLoginPage && isSignedIn) {
       signOut().then(() => {
-        router.push("/admin/login?error=unauthorized");
+        setShowUnauthorizedLogin(true);
       }).catch(() => {
-        router.push("/admin/login?error=unauthorized");
+        setShowUnauthorizedLogin(true);
       });
     }
-  }, [checking, authorized, isLoginPage, isSignedIn, router, signOut]);
+  }, [checking, authorized, isLoginPage, isSignedIn, signOut]);
+
+  if (showUnauthorizedLogin) {
+    return <AdminLoginForm unauthorized />;
+  }
 
   if (checking) {
     return (

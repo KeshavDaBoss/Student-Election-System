@@ -17,7 +17,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@gsap/react": "^2.1.2",
-    "@neondatabase/serverless": "^1.1.0",
+    "@libsql/client": "^0.17.0",
     "drizzle-orm": "^0.45.2",
     "google-auth-library": "^10.9.0",
     "gsap": "^3.15.0",

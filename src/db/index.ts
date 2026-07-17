@@ -1,18 +1,24 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { createClient } from "@libsql/client/web";
+import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 
-const DATABASE_URL = process.env.DATABASE_URL;
+const TURSO_DATABASE_URL = process.env.TURSO_DATABASE_URL;
+const TURSO_AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN;
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
 function getDb() {
   if (!_db) {
-    if (!DATABASE_URL) {
-      throw new Error("No database connection string was provided to `neon()`. Perhaps an environment variable has not been set?");
+    if (!TURSO_DATABASE_URL) {
+      throw new Error(
+        "TURSO_DATABASE_URL is not set. Add it to your environment variables."
+      );
     }
-    const sql = neon(DATABASE_URL);
-    _db = drizzle(sql, { schema });
+    const client = createClient({
+      url: TURSO_DATABASE_URL,
+      authToken: TURSO_AUTH_TOKEN,
+    });
+    _db = drizzle(client, { schema });
   }
   return _db;
 }

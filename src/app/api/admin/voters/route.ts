@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { students } from "@/db/schema";
 import { requireClerkAdmin } from "@/lib/clerk-admin";
-import { sql, ilike, or, eq } from "drizzle-orm";
+import { sql, like, or, eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   const admin = await requireClerkAdmin();
@@ -20,9 +20,10 @@ export async function GET(request: NextRequest) {
     let whereClause = undefined;
     
     if (search) {
+      const pattern = `%${search.toLowerCase()}%`;
       whereClause = or(
-        ilike(students.name, `%${search}%`),
-        ilike(students.electionNumber, `%${search}%`)
+        like(sql`lower(${students.name})`, pattern),
+        like(sql`lower(${students.electionNumber})`, pattern)
       );
     }
 
@@ -113,9 +114,9 @@ export async function POST(request: NextRequest) {
       await db.insert(students).values(chunk).onConflictDoUpdate({
         target: students.electionNumber,
         set: {
-          name: sql`EXCLUDED.name`,
-          class: sql`EXCLUDED.class`,
-          section: sql`EXCLUDED.section`,
+          name: sql`excluded.name`,
+          class: sql`excluded.class`,
+          section: sql`excluded.section`,
         }
       });
       

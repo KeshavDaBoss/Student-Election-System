@@ -1,18 +1,21 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { createClient } from "@libsql/client/web";
+import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "../src/db/schema";
 import { config } from "dotenv";
 import { eq } from "drizzle-orm";
 
 config({ path: ".env.local" });
 
-if (!process.env.DATABASE_URL) {
-  console.error("DATABASE_URL is missing in .env.local");
+if (!process.env.TURSO_DATABASE_URL) {
+  console.error("TURSO_DATABASE_URL is missing in .env.local");
   process.exit(1);
 }
 
-const sql = neon(process.env.DATABASE_URL);
-const db = drizzle(sql, { schema });
+const client = createClient({
+  url: process.env.TURSO_DATABASE_URL,
+  authToken: process.env.TURSO_AUTH_TOKEN,
+});
+const db = drizzle(client, { schema });
 
 async function seed() {
   console.log("Seeding database...");

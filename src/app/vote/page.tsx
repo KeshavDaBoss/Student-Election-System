@@ -53,13 +53,11 @@ const CandidateCardContent = memo(function CandidateCardContent({
   candidate,
   rank,
   isDragging = false,
-  isReady = false,
   isOverlay = false,
 }: {
   candidate: CandidateData;
   rank: number;
   isDragging?: boolean;
-  isReady?: boolean;
   isOverlay?: boolean;
 }) {
   const getRankClass = (r: number) => {
@@ -71,7 +69,7 @@ const CandidateCardContent = memo(function CandidateCardContent({
 
   return (
     <div
-      className={`candidate-card ${isDragging || isReady ? "dragging" : ""} ${isOverlay ? "drag-overlay" : ""}`}
+      className={`candidate-card ${isDragging ? "dragging" : ""} ${isOverlay ? "drag-overlay" : ""}`}
       style={isOverlay ? { boxShadow: "0 20px 60px rgba(0,0,0,0.25)", cursor: "grabbing" } : undefined}
     >
       <div className="candidate-card__rank-col">{getRankClass(rank) && <div className={getRankClass(rank)}>{rank}</div>}</div>
@@ -122,33 +120,6 @@ const SortableCandidate = memo(function SortableCandidate({
     isDragging,
   } = useSortable({ id: candidate.id });
 
-  const [isReady, setIsReady] = useState(false);
-  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handlePointerDown = useCallback(() => {
-    holdTimerRef.current = setTimeout(() => {
-      setIsReady(true);
-    }, 400);
-  }, []);
-
-  const clearHold = useCallback(() => {
-    if (holdTimerRef.current) {
-      clearTimeout(holdTimerRef.current);
-      holdTimerRef.current = null;
-    }
-    setIsReady(false);
-  }, []);
-
-  useEffect(() => {
-    const handleUp = () => clearHold();
-    window.addEventListener("pointerup", handleUp);
-    window.addEventListener("pointercancel", handleUp);
-    return () => {
-      window.removeEventListener("pointerup", handleUp);
-      window.removeEventListener("pointercancel", handleUp);
-    };
-  }, [clearHold]);
-
   // Manually construct translate3d to prevent any scaling/offset issues
   const style: React.CSSProperties = {
     transform: transform ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)` : undefined,
@@ -168,14 +139,12 @@ const SortableCandidate = memo(function SortableCandidate({
       <div
         {...attributes}
         {...listeners}
-        onPointerDown={handlePointerDown}
         style={{ touchAction: "none", cursor: isDragging ? "grabbing" : "grab" }}
       >
         <CandidateCardContent
           candidate={candidate}
           rank={rank}
           isDragging={isDragging}
-          isReady={isReady}
         />
       </div>
     </div>
@@ -195,7 +164,7 @@ function PositionRanking({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        delay: 400,
+        delay: 700,
         tolerance: 10,
       },
     }),
@@ -244,7 +213,7 @@ function PositionRanking({
           fontStyle: "italic",
         }}
       >
-        Press and hold a card for 0.4s, then drag to reorder. Top = 1st choice.
+        Press and hold a card for 0.7s, then drag to reorder. Top = 1st choice.
       </p>
 
       <DndContext

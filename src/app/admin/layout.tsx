@@ -2,10 +2,14 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import AdminLoginForm from "@/app/admin/login/login-form";
+
+const SIDEBAR_MIN = 200;
+const SIDEBAR_MAX = 420;
+const SIDEBAR_DEFAULT = 260;
 
 const NAV_ITEMS = [
   {
@@ -69,8 +73,52 @@ export default function AdminLayout({
   const [adminRole, setAdminRole] = useState("");
   const [checking, setChecking] = useState(true);
   const [showUnauthorizedLogin, setShowUnauthorizedLogin] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT);
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarWidthRef = useRef(SIDEBAR_DEFAULT);
 
   const isLoginPage = pathname === "/admin/login";
+
+  useEffect(() => {
+    const saved = localStorage.getItem("admin-sidebar-width");
+    if (saved) {
+      const width = Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, Number(saved)));
+      setSidebarWidth(width);
+      sidebarWidthRef.current = width;
+    }
+  }, []);
+
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const onMove = (e: MouseEvent) => {
+      const width = Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, e.clientX));
+      setSidebarWidth(width);
+      sidebarWidthRef.current = width;
+    };
+
+    const onUp = () => {
+      setIsResizing(false);
+      localStorage.setItem("admin-sidebar-width", String(sidebarWidthRef.current));
+    };
+
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isResizing]);
 
   useEffect(() => {
     if (isLoginPage) {
@@ -149,8 +197,18 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="admin-layout">
+    <div
+      className="admin-layout"
+      style={{ "--sidebar-width": `${sidebarWidth}px` } as React.CSSProperties}
+    >
       <aside className="sidebar">
+        <div
+          className={`sidebar__resize-handle${isResizing ? " sidebar__resize-handle--active" : ""}`}
+          onMouseDown={handleResizeStart}
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize sidebar"
+        />
         <div className="sidebar__logo">
           <div
             style={{

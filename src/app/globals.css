@@ -503,8 +503,9 @@ a:hover {
 }
 
 .candidate-card.dragging {
-  border-color: var(--orange-300);
+  border-color: var(--orange-500);
   cursor: grabbing;
+  box-shadow: var(--shadow-md), 0 0 0 3px rgba(255, 152, 0, 0.15);
 }
 
 .candidate-card.drag-overlay {
@@ -606,14 +607,6 @@ a:hover {
 .sidebar__tutorial-link svg {
   flex-shrink: 0;
   margin-top: 2px;
-}
-
-/* Arrow move buttons on candidate cards */
-.candidate-card__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex-shrink: 0;
 }
 
 /* --- Modal / Overlay --- */

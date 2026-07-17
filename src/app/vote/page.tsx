@@ -52,15 +52,11 @@ interface VoterInfo {
 const CandidateCardContent = memo(function CandidateCardContent({
   candidate,
   rank,
-  totalCandidates,
-  onChangeRank,
   isDragging = false,
   isOverlay = false,
 }: {
   candidate: CandidateData;
   rank: number;
-  totalCandidates: number;
-  onChangeRank?: (candidateId: number, newRank: number) => void;
   isDragging?: boolean;
   isOverlay?: boolean;
 }) {
@@ -98,22 +94,9 @@ const CandidateCardContent = memo(function CandidateCardContent({
           </a>
         )}
       </div>
-      {!isOverlay && onChangeRank && (
-        <div className="candidate-card__actions" onPointerDown={(e) => e.stopPropagation()}>
-          <input
-            type="number"
-            className="rank-input form-input"
-            min={1}
-            max={totalCandidates}
-            value={rank}
-            onChange={(e) => {
-              const val = parseInt(e.target.value, 10);
-              if (!isNaN(val) && val >= 1 && val <= totalCandidates) {
-                onChangeRank(candidate.id, val);
-              }
-            }}
-            style={{ width: "4rem", textAlign: "center", padding: "8px 4px", fontSize: "0.875rem" }}
-          />
+      {!isOverlay && (
+        <div className="candidate-card__rank-hint">
+          <span className="rank-badge rank-badge--default">{rank}</span>
         </div>
       )}
     </div>
@@ -124,13 +107,9 @@ const CandidateCardContent = memo(function CandidateCardContent({
 const SortableCandidate = memo(function SortableCandidate({
   candidate,
   rank,
-  totalCandidates,
-  onChangeRank,
 }: {
   candidate: CandidateData;
   rank: number;
-  totalCandidates: number;
-  onChangeRank: (candidateId: number, newRank: number) => void;
 }) {
   const {
     attributes,
@@ -165,8 +144,6 @@ const SortableCandidate = memo(function SortableCandidate({
         <CandidateCardContent
           candidate={candidate}
           rank={rank}
-          totalCandidates={totalCandidates}
-          onChangeRank={onChangeRank}
           isDragging={isDragging}
         />
       </div>
@@ -187,7 +164,8 @@ function PositionRanking({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 3,
+        delay: 700,
+        tolerance: 10,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -213,23 +191,6 @@ function PositionRanking({
     }
   }
 
-  const handleChangeRank = useCallback(
-    (candidateId: number, newRank: number) => {
-      const currentIndex = rankings.indexOf(candidateId);
-      const nextIndex = newRank - 1; // 1-indexed to 0-indexed
-
-      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= rankings.length) {
-        return;
-      }
-
-      onRankingsChange(
-        position.id,
-        arrayMove(rankings, currentIndex, nextIndex)
-      );
-    },
-    [onRankingsChange, position.id, rankings]
-  );
-
   return (
     <div className="position-section mb-2xl">
       <h3 style={{ marginBottom: "var(--space-xs)" }}>{position.title}</h3>
@@ -252,7 +213,7 @@ function PositionRanking({
           fontStyle: "italic",
         }}
       >
-        Drag cards or type a number to reorder. Top = 1st choice.
+        Press and hold a card for 0.7s, then drag to reorder. Top = 1st choice.
       </p>
 
       <DndContext
@@ -268,8 +229,6 @@ function PositionRanking({
                 key={candidate.id}
                 candidate={candidate}
                 rank={index + 1}
-                totalCandidates={orderedCandidates.length}
-                onChangeRank={handleChangeRank}
               />
             ))}
           </div>

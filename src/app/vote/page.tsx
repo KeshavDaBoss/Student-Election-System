@@ -163,10 +163,10 @@ function PositionRanking({
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        delay: 700,
-        tolerance: 10,
-      },
+        activationConstraint: {
+          delay: 400,
+          tolerance: 10,
+        },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,

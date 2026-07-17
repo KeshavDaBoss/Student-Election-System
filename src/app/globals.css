@@ -498,7 +498,6 @@ a:hover {
 }
 
 .candidate-card:hover {
-  border-color: var(--orange-300);
   box-shadow: var(--shadow-md);
 }
 

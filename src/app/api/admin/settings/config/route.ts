@@ -19,6 +19,8 @@ export async function PUT(request: NextRequest) {
           isAlwaysLive: data.isAlwaysLive,
           startTime: data.startTime ? new Date(data.startTime) : null,
           endTime: data.endTime ? new Date(data.endTime) : null,
+          voterTutorialVideoUrl: data.voterTutorialVideoUrl || null,
+          adminTutorialVideoUrl: data.adminTutorialVideoUrl || null,
           updatedAt: new Date()
         })
         .where(eq(electionConfig.id, configs[0].id));
@@ -27,6 +29,8 @@ export async function PUT(request: NextRequest) {
         isAlwaysLive: data.isAlwaysLive,
         startTime: data.startTime ? new Date(data.startTime) : null,
         endTime: data.endTime ? new Date(data.endTime) : null,
+        voterTutorialVideoUrl: data.voterTutorialVideoUrl || null,
+        adminTutorialVideoUrl: data.adminTutorialVideoUrl || null,
       });
     }
 

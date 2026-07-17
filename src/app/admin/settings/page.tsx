@@ -11,6 +11,8 @@ interface ElectionConfig {
   startTime: string | null;
   endTime: string | null;
   isAlwaysLive: boolean;
+  voterTutorialVideoUrl: string | null;
+  adminTutorialVideoUrl: string | null;
 }
 
 interface AdminUser {
@@ -242,6 +244,47 @@ export default function AdminSettingsPage() {
 
           <button type="submit" className="btn btn-primary" disabled={saving}>
             {saving ? "Saving..." : "Save Configuration"}
+          </button>
+        </form>
+      </div>
+
+      <div className="glass-card page-section mb-2xl">
+        <h2 className="mb-md">Tutorial Videos</h2>
+        <p className="mb-lg" style={{ fontSize: "0.875rem", color: "var(--gray-500)" }}>
+          Configure tutorial video links shown on the voter login page and in the admin dashboard.
+        </p>
+
+        <form onSubmit={saveConfig}>
+          <div className="form-group mb-md">
+            <label className="form-label">Voter login tutorial video URL</label>
+            <input
+              type="url"
+              className="form-input"
+              placeholder="https://youtube.com/watch?v=..."
+              value={config.voterTutorialVideoUrl || ""}
+              onChange={(e) =>
+                setConfig({ ...config, voterTutorialVideoUrl: e.target.value || null })
+              }
+            />
+            <span className="form-hint">Shown as &quot;Watch the tutorial video&quot; on the voter login page.</span>
+          </div>
+
+          <div className="form-group mb-xl">
+            <label className="form-label">Admin dashboard tutorial video URL</label>
+            <input
+              type="url"
+              className="form-input"
+              placeholder="https://youtube.com/watch?v=..."
+              value={config.adminTutorialVideoUrl || ""}
+              onChange={(e) =>
+                setConfig({ ...config, adminTutorialVideoUrl: e.target.value || null })
+              }
+            />
+            <span className="form-hint">Shown as &quot;Watch the admin dashboard tutorial video&quot; in the admin sidebar.</span>
+          </div>
+
+          <button type="submit" className="btn btn-primary" disabled={saving}>
+            {saving ? "Saving..." : "Save Tutorial Links"}
           </button>
         </form>
       </div>

@@ -570,6 +570,44 @@ a:hover {
   text-decoration: underline;
 }
 
+.tutorial-video-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--orange-600);
+  text-decoration: none;
+}
+
+.tutorial-video-link:hover {
+  color: var(--orange-700);
+  text-decoration: underline;
+}
+
+.sidebar__tutorial-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: var(--space-md) var(--space-md) 0;
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--orange-600);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 152, 0, 0.08);
+  border: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.sidebar__tutorial-link:hover {
+  color: var(--orange-700);
+  background: rgba(255, 152, 0, 0.12);
+}
+
+.sidebar__tutorial-link svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 /* Arrow move buttons on candidate cards */
 .candidate-card__actions {
   display: flex;

@@ -75,6 +75,7 @@ export default function AdminLayout({
   const [showUnauthorizedLogin, setShowUnauthorizedLogin] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT);
   const [isResizing, setIsResizing] = useState(false);
+  const [adminTutorialVideoUrl, setAdminTutorialVideoUrl] = useState<string | null>(null);
   const sidebarWidthRef = useRef(SIDEBAR_DEFAULT);
 
   const isLoginPage = pathname === "/admin/login";
@@ -144,6 +145,12 @@ export default function AdminLayout({
           setAdminEmail(data.email);
           setAdminRole(data.role);
           setAuthorized(true);
+
+          const settingsRes = await fetch("/api/admin/settings");
+          if (settingsRes.ok) {
+            const settingsData = await settingsRes.json();
+            setAdminTutorialVideoUrl(settingsData.config?.adminTutorialVideoUrl || null);
+          }
         } else {
           setAuthorized(false);
         }
@@ -247,6 +254,20 @@ export default function AdminLayout({
             );
           })}
         </nav>
+
+        {adminTutorialVideoUrl && (
+          <a
+            href={adminTutorialVideoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sidebar__tutorial-link"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            Watch the admin dashboard tutorial video
+          </a>
+        )}
 
         <div style={{ marginTop: "auto", paddingTop: "var(--space-lg)" }}>
           {adminEmail && (

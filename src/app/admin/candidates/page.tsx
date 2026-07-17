@@ -219,6 +219,7 @@ export default function AdminCandidatesPage() {
                          <tr>
                            <th>Name</th>
                            <th>Class & Section</th>
+                           <th>Campaign Video</th>
                            <th style={{ textAlign: "right" }}>Actions</th>
                          </tr>
                        </thead>
@@ -227,6 +228,20 @@ export default function AdminCandidatesPage() {
                            <tr key={c.id}>
                              <td style={{ fontWeight: 500 }}>{c.name}</td>
                              <td>{c.class ? `${c.class}-${c.section}` : "-"}</td>
+                             <td>
+                               {c.campaignVideoUrl ? (
+                                 <a
+                                   href={c.campaignVideoUrl}
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   style={{ color: "var(--orange-600)", fontWeight: 500, fontSize: "0.875rem" }}
+                                 >
+                                   View video
+                                 </a>
+                               ) : (
+                                 <span style={{ color: "var(--gray-400)" }}>—</span>
+                               )}
+                             </td>
                              <td style={{ textAlign: "right" }}>
                                <button 
                                  className="btn btn-ghost" style={{ padding: "4px 8px", fontSize: "0.875rem" }}

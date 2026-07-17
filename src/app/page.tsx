@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [attemptsLeft, setAttemptsLeft] = useState(5);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const [countdown, setCountdown] = useState("");
+  const [tutorialVideoUrl, setTutorialVideoUrl] = useState<string | null>(null);
 
   // Countdown timer
   useEffect(() => {
@@ -46,21 +47,30 @@ export default function LoginPage() {
     return () => clearInterval(interval);
   }, [lockedUntil]);
 
-  // Fetch initial rate limit status on mount
+  // Fetch initial rate limit status and tutorial link on mount
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await fetch("/api/auth/login/status");
-        if (res.ok) {
-          const data = await res.json();
+        const [statusRes, configRes] = await Promise.all([
+          fetch("/api/auth/login/status"),
+          fetch("/api/config/public"),
+        ]);
+
+        if (statusRes.ok) {
+          const data = await statusRes.json();
           if (data.isLocked) {
             setLockedUntil(data.lockedUntil);
             setError(`Too many failed attempts. Try again in ${data.lockedUntil}`); // timer will update this immediately
           }
           setAttemptsLeft(data.attemptsLeft);
         }
+
+        if (configRes.ok) {
+          const data = await configRes.json();
+          setTutorialVideoUrl(data.voterTutorialVideoUrl || null);
+        }
       } catch (err) {
-        console.error("Failed to fetch rate limit status", err);
+        console.error("Failed to fetch login page config", err);
       }
     };
     fetchStatus();
@@ -316,6 +326,19 @@ export default function LoginPage() {
             </button>
           </form>
         </div>
+
+        {tutorialVideoUrl && (
+          <p style={{ textAlign: "center", marginTop: "var(--space-lg)" }}>
+            <a
+              href={tutorialVideoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tutorial-video-link"
+            >
+              Watch the tutorial video
+            </a>
+          </p>
+        )}
 
       </div>
     </div>

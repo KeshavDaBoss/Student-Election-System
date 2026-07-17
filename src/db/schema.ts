@@ -107,6 +107,8 @@ export const electionConfig = sqliteTable("election_config", {
   isAlwaysLive: integer("is_always_live", { mode: "boolean" })
     .notNull()
     .default(false),
+  voterTutorialVideoUrl: text("voter_tutorial_video_url"),
+  adminTutorialVideoUrl: text("admin_tutorial_video_url"),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),

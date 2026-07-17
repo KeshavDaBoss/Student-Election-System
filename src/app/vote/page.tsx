@@ -96,11 +96,6 @@ const CandidateCardContent = memo(function CandidateCardContent({
           </a>
         )}
       </div>
-      {!isOverlay && (
-        <div className="candidate-card__rank-hint">
-          <span className="rank-badge rank-badge--default">{rank}</span>
-        </div>
-      )}
     </div>
   );
 });

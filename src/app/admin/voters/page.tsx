@@ -65,6 +65,17 @@ export default function AdminVotersPage() {
     }
   }, [page, search]);
 
+  const exportCsv = useCallback(() => {
+    try {
+      const url = new URL("/api/admin/voters", window.location.origin);
+      url.searchParams.set("format", "csv");
+      if (search) url.searchParams.set("search", search);
+      window.location.href = url.toString();
+    } catch (err) {
+      console.error(err);
+    }
+  }, [search]);
+
   useEffect(() => {
     fetchVoters(page, search);
   }, [page, fetchVoters, search]);
@@ -298,6 +309,13 @@ export default function AdminVotersPage() {
               onClick={() => { setPage(1); fetchVoters(1, search); }}
             >
               Search
+            </button>
+            <button
+              className="btn btn-secondary"
+              style={{ padding: "10px 16px" }}
+              onClick={exportCsv}
+            >
+              Export CSV
             </button>
             <button 
               className="btn btn-primary" 

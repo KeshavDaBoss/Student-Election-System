@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get("page") || "1", 10);
   const search = searchParams.get("search") || "";
+  const format = searchParams.get("format") || "";
   const pageSize = 20;
   const offset = (page - 1) * pageSize;
 
@@ -27,8 +28,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get paginated students
-    const voters = await db
+    const baseSelect = db
       .select({
         id: students.id,
         name: students.name,
@@ -39,7 +39,47 @@ export async function GET(request: NextRequest) {
         votedAt: students.votedAt,
       })
       .from(students)
-      .where(whereClause)
+      .where(whereClause);
+
+    // CSV export: return all matching voters as a downloadable file
+    if (format === "csv") {
+      const allVoters = await baseSelect.orderBy(students.name);
+
+      const escapeCsv = (value: string | number | boolean | null | undefined) => {
+        const str = value === null || value === undefined ? "" : String(value);
+        if (/[",\n]/.test(str)) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      };
+
+      const header = ["Name", "Election Number", "Class", "Section", "Has Voted", "Voted At"];
+      const rows = allVoters.map((v) =>
+        [
+          v.name,
+          v.electionNumber,
+          v.class,
+          v.section,
+          v.hasVoted ? "Yes" : "No",
+          v.votedAt ? new Date(v.votedAt).toISOString() : "",
+        ].map(escapeCsv).join(",")
+      );
+      const csv = [header.join(","), ...rows].join("\n");
+
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const filename = `voters-${timestamp}.csv`;
+
+      return new NextResponse(csv, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+        },
+      });
+    }
+
+    // Get paginated students
+    const voters = await baseSelect
       .limit(pageSize)
       .offset(offset)
       .orderBy(students.name);
@@ -49,7 +89,7 @@ export async function GET(request: NextRequest) {
       .select({ count: sql<number>`count(*)` })
       .from(students)
       .where(whereClause);
-      
+       
     const totalCount = Number(countResult[0].count);
 
     return NextResponse.json({

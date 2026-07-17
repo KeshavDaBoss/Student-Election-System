@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useClerk } from "@clerk/nextjs";
-import AdminLoginForm from "@/app/admin/login/login-form";
 
 const NAV_ITEMS = [
   {
@@ -68,15 +67,12 @@ export default function AdminLayout({
   const [adminEmail, setAdminEmail] = useState("");
   const [adminRole, setAdminRole] = useState("");
   const [checking, setChecking] = useState(true);
-  const [showUnauthorizedLogin, setShowUnauthorizedLogin] = useState(false);
-
   const isLoginPage = pathname === "/admin/login";
 
   useEffect(() => {
     if (isLoginPage) {
       setChecking(false);
       setAuthorized(true);
-      setShowUnauthorizedLogin(false);
       return;
     }
 
@@ -111,17 +107,15 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (!checking && !authorized && !isLoginPage && isSignedIn) {
-      signOut().then(() => {
-        setShowUnauthorizedLogin(true);
-      }).catch(() => {
-        setShowUnauthorizedLogin(true);
-      });
+      signOut()
+        .then(() => {
+          router.replace("/admin/login?error=unauthorized");
+        })
+        .catch(() => {
+          router.replace("/admin/login?error=unauthorized");
+        });
     }
-  }, [checking, authorized, isLoginPage, isSignedIn, signOut]);
-
-  if (showUnauthorizedLogin) {
-    return <AdminLoginForm unauthorized />;
-  }
+  }, [checking, authorized, isLoginPage, isSignedIn, signOut, router]);
 
   if (checking) {
     return (

@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useAuth } from "@clerk/nextjs";
 import AdminLoginForm from "./login-form";
 
@@ -24,5 +25,9 @@ export default function AdminLoginPage() {
     );
   }
 
-  return <AdminLoginForm />;
+  return (
+    <Suspense fallback={null}>
+      <AdminLoginForm />
+    </Suspense>
+  );
 }

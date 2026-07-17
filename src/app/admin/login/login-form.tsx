@@ -1,12 +1,11 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { SignInButton } from "@clerk/nextjs";
 
-interface AdminLoginFormProps {
-  unauthorized?: boolean;
-}
-
-export default function AdminLoginForm({ unauthorized }: AdminLoginFormProps) {
+export default function AdminLoginForm() {
+  const searchParams = useSearchParams();
+  const unauthorized = searchParams.get("error") === "unauthorized";
   return (
     <div className="page-wrapper">
       <div className="center-card">

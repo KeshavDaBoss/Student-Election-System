@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth, useUser } from "@clerk/nextjs";
 
 const NAV_ITEMS = [
   {
@@ -47,7 +48,7 @@ const NAV_ITEMS = [
     label: "Settings",
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+        <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l-.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 00.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
       </svg>
     ),
   },
@@ -60,61 +61,50 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { isSignedIn, userId } = useAuth();
+  const { user } = useUser();
   const [authorized, setAuthorized] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
   const [adminRole, setAdminRole] = useState("");
+  const [checking, setChecking] = useState(true);
 
-  // Skip auth check on admin login page
   const isLoginPage = pathname === "/admin/login";
 
   useEffect(() => {
     if (isLoginPage) {
+      setChecking(false);
       setAuthorized(true);
       return;
     }
 
-    const token = document.cookie
-      .split(";")
-      .map((c) => c.trim())
-      .find((c) => c.startsWith("ses_admin_token="))
-      ?.split("=")[1];
-
-    if (!token) {
-      router.push("/admin/login");
-    } else {
-      setAuthorized(true);
+    if (!isSignedIn) {
+      router.push("/sign-in");
+      return;
     }
-  }, [isLoginPage, router]);
 
-  useEffect(() => {
-    if (isLoginPage || !authorized) return;
-
-    async function loadAdmin() {
+    async function checkAdmin() {
       try {
-        const token = document.cookie
-          .split(";")
-          .map((c) => c.trim())
-          .find((c) => c.startsWith("ses_admin_token="))
-          ?.split("=")[1];
-
-        const res = await fetch("/api/admin/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch("/api/admin/me");
 
         if (res.ok) {
           const data = await res.json();
           setAdminEmail(data.email);
           setAdminRole(data.role);
+          setAuthorized(true);
+        } else {
+          setAuthorized(false);
         }
       } catch {
-        // ignore
+        setAuthorized(false);
+      } finally {
+        setChecking(false);
       }
     }
 
-    loadAdmin();
-  }, [isLoginPage, authorized]);
+    checkAdmin();
+  }, [isLoginPage, isSignedIn, router]);
 
-  if (!authorized) {
+  if (checking) {
     return (
       <div className="page-wrapper">
         <div className="spinner spinner--lg" />
@@ -122,14 +112,25 @@ export default function AdminLayout({
     );
   }
 
-  // Login page renders without sidebar
+  if (!authorized) {
+    return (
+      <div className="page-wrapper">
+        <div className="center-card glass-card" style={{ textAlign: "center" }}>
+          <h2>Access Denied</h2>
+          <p style={{ color: "var(--gray-500)", marginTop: "var(--space-sm)" }}>
+            This login is not authorised to access the admin dashboard.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoginPage) {
     return <>{children}</>;
   }
 
   const handleLogout = () => {
-    document.cookie = "ses_admin_token=; path=/; max-age=0";
-    router.push("/admin/login");
+    router.push("/sign-in");
   };
 
   return (

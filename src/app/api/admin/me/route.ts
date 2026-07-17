@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { requireClerkAdmin } from "@/lib/clerk-admin";
 
 export async function GET(request: NextRequest) {
-  const admin = await requireAdmin(request);
+  const admin = await requireClerkAdmin();
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

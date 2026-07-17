@@ -35,15 +35,7 @@ export default function AdminAnalyticsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const token = document.cookie
-          .split(";")
-          .map((c) => c.trim())
-          .find((c) => c.startsWith("ses_admin_token="))
-          ?.split("=")[1];
-
-        const res = await fetch("/api/admin/analytics", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch("/api/admin/analytics");
 
         if (res.ok) {
           setAnalytics(await res.json());

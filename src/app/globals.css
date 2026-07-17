@@ -1217,4 +1217,16 @@ a:hover {
 .justify-between { justify-content: space-between; }
 .justify-center { justify-content: center; }
 .w-full { width: 100%; }
+
+/* Hide Clerk default UI elements */
+.cl-footer,
+[class*="footer"],
+[data-testid*="footer"],
+[data-testid*="poweredBy"],
+[data-testid*="sign-up-footer"],
+[data-testid*="devModeBanner"],
+[class*="poweredBy"],
+[class*="dev-mode"] {
+  display: none !important;
+}
 .hidden { display: none; }

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { candidates, positions } from "@/db/schema";
-import { requireAdmin } from "@/lib/auth";
+import { requireClerkAdmin } from "@/lib/clerk-admin";
 import { eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
-  const admin = await requireAdmin(request);
+  const admin = await requireClerkAdmin();
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const admin = await requireAdmin(request);
+  const admin = await requireClerkAdmin();
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const admin = await requireAdmin(request);
+  const admin = await requireClerkAdmin();
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
@@ -59,7 +59,7 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const admin = await requireAdmin(request);
+  const admin = await requireClerkAdmin();
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(request.url);

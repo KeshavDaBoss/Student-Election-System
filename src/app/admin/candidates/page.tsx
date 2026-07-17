@@ -40,15 +40,7 @@ export default function AdminCandidatesPage() {
   const fetchPositions = useCallback(async () => {
     setLoading(true);
     try {
-      const token = document.cookie
-        .split(";")
-        .map((c) => c.trim())
-        .find((c) => c.startsWith("ses_admin_token="))
-        ?.split("=")[1];
-
-      const res = await fetch("/api/admin/candidates", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch("/api/admin/candidates");
 
       if (res.ok) {
         setPositions(await res.json());
@@ -93,10 +85,8 @@ export default function AdminCandidatesPage() {
     };
 
     try {
-      const token = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ses_admin_token="))?.split("=")[1];
       await fetch("/api/admin/candidates/positions", {
         method: data.id ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
       });
       setShowPositionModal(false);
@@ -120,10 +110,8 @@ export default function AdminCandidatesPage() {
     };
 
     try {
-      const token = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ses_admin_token="))?.split("=")[1];
       await fetch("/api/admin/candidates", {
         method: data.id ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
       });
       setShowCandidateModal(false);
@@ -136,10 +124,8 @@ export default function AdminCandidatesPage() {
   const deletePosition = async (id: number) => {
     if (!confirm("Are you sure you want to delete this position? All candidates and votes for this position will be permanently deleted.")) return;
     try {
-      const token = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ses_admin_token="))?.split("=")[1];
       await fetch(`/api/admin/candidates/positions?id=${id}`, { 
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
       });
       fetchPositions();
     } catch (err) {
@@ -151,10 +137,8 @@ export default function AdminCandidatesPage() {
   const deleteCandidate = async (id: number) => {
     if (!confirm("Are you sure you want to delete this candidate?")) return;
     try {
-      const token = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ses_admin_token="))?.split("=")[1];
       await fetch(`/api/admin/candidates?id=${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
       fetchPositions();
     } catch (err) {

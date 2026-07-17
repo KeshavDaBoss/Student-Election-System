@@ -46,19 +46,11 @@ export default function AdminVotersPage() {
   const fetchVoters = useCallback(async (p = page, s = search) => {
     setLoading(true);
     try {
-      const token = document.cookie
-        .split(";")
-        .map((c) => c.trim())
-        .find((c) => c.startsWith("ses_admin_token="))
-        ?.split("=")[1];
-
       const url = new URL("/api/admin/voters", window.location.origin);
       url.searchParams.set("page", p.toString());
       if (s) url.searchParams.set("search", s);
 
-      const res = await fetch(url.toString(), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(url.toString());
 
       if (res.ok) {
         const data = await res.json();
@@ -137,11 +129,8 @@ export default function AdminVotersPage() {
     setUploading(true);
 
     try {
-      const token = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ses_admin_token="))?.split("=")[1];
-
       const res = await fetch("/api/admin/voters", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ students: result.data }),
       });
 
@@ -175,12 +164,10 @@ export default function AdminVotersPage() {
     };
 
     try {
-      const token = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ses_admin_token="))?.split("=")[1];
       const isEdit = !!data.id;
       
       const res = await fetch("/api/admin/voters", {
         method: isEdit ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(isEdit ? data : { student: data }),
       });
 
@@ -201,10 +188,8 @@ export default function AdminVotersPage() {
   const deleteVoter = async (id: number) => {
     if (!confirm("Are you sure you want to delete this voter?")) return;
     try {
-      const token = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ses_admin_token="))?.split("=")[1];
       await fetch(`/api/admin/voters?id=${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
       fetchVoters();
     } catch (err) {

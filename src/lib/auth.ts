@@ -12,29 +12,19 @@ export interface VoterPayload extends JWTPayload {
   hasVoted: boolean;
 }
 
-// --- Admin Token ---
-export interface AdminPayload extends JWTPayload {
-  type: "admin";
-  email: string;
-  adminId: number;
-  role: "admin" | "superadmin";
-}
-
-export type TokenPayload = VoterPayload | AdminPayload;
+export type TokenPayload = VoterPayload;
 
 /**
  * Sign a JWT token with the given payload.
- * Voter tokens expire in 1 hour, admin tokens in 8 hours.
+ * Voter tokens expire in 1 hour.
  */
 export async function signToken(
-  payload: Omit<VoterPayload, "iat" | "exp"> | Omit<AdminPayload, "iat" | "exp">
+  payload: Omit<VoterPayload, "iat" | "exp">
 ): Promise<string> {
-  const expiresIn = payload.type === "admin" ? "8h" : "1h";
-
   return new SignJWT(payload as JWTPayload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(expiresIn)
+    .setExpirationTime("1h")
     .sign(JWT_SECRET);
 }
 
@@ -91,19 +81,4 @@ export async function requireVoter(
   if (!payload || payload.type !== "voter") return null;
 
   return payload as VoterPayload;
-}
-
-/**
- * Verify a request has a valid admin token.
- */
-export async function requireAdmin(
-  request: Request
-): Promise<AdminPayload | null> {
-  const token = extractToken(request);
-  if (!token) return null;
-
-  const payload = await verifyToken(token);
-  if (!payload || payload.type !== "admin") return null;
-
-  return payload as AdminPayload;
 }

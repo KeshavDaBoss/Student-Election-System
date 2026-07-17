@@ -35,15 +35,7 @@ export default function AdminSettingsPage() {
 
   const loadData = async () => {
     try {
-      const token = document.cookie
-        .split(";")
-        .map((c) => c.trim())
-        .find((c) => c.startsWith("ses_admin_token="))
-        ?.split("=")[1];
-
-      const res = await fetch("/api/admin/settings", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch("/api/admin/settings");
 
       if (res.ok) {
         const data = await res.json();
@@ -81,11 +73,8 @@ export default function AdminSettingsPage() {
     setMessage({ type: "", text: "" });
 
     try {
-      const token = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ses_admin_token="))?.split("=")[1];
-      
       const res = await fetch("/api/admin/settings/config", {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(config),
       });
 
@@ -104,10 +93,8 @@ export default function AdminSettingsPage() {
     if (!newAdminEmail) return;
 
     try {
-      const token = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ses_admin_token="))?.split("=")[1];
       const res = await fetch("/api/admin/settings/admins", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ email: newAdminEmail }),
       });
 
@@ -127,10 +114,8 @@ export default function AdminSettingsPage() {
   const removeAdmin = async (id: number) => {
     if (!confirm("Are you sure you want to remove this admin?")) return;
     try {
-      const token = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ses_admin_token="))?.split("=")[1];
       await fetch(`/api/admin/settings/admins?id=${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
       loadData();
     } catch (err) {
@@ -142,10 +127,8 @@ export default function AdminSettingsPage() {
     if (!resetEmailConfirm) return;
     setResetting(true);
     try {
-      const token = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ses_admin_token="))?.split("=")[1];
       const res = await fetch("/api/admin/settings/reset", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ email: resetEmailConfirm }),
       });
 

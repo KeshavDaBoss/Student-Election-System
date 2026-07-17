@@ -1,3 +1,4 @@
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -22,7 +23,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ClerkProvider
+          appearance={{
+            elements: {
+              footer: { display: "none" },
+              footerAction: { display: "none" },
+              poweredByFooter: { display: "none" },
+              devModeBanner: { display: "none" },
+            },
+          }}
+        >
+          {children}
+        </ClerkProvider>
+      </body>
     </html>
   );
 }

@@ -20,33 +20,14 @@ export default function AdminOverviewPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<OverviewData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [adminEmail, setAdminEmail] = useState("");
 
   useEffect(() => {
     async function load() {
       try {
-        const token = document.cookie
-          .split(";")
-          .map((c) => c.trim())
-          .find((c) => c.startsWith("ses_admin_token="))
-          ?.split("=")[1];
+        const res = await fetch("/api/admin/overview");
 
-        const [overviewRes, meRes] = await Promise.all([
-          fetch("/api/admin/overview", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("/api/admin/me", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        if (overviewRes.ok) {
-          setData(await overviewRes.json());
-        }
-
-        if (meRes.ok) {
-          const meData = await meRes.json();
-          setAdminEmail(meData.email);
+        if (res.ok) {
+          setData(await res.json());
         }
       } catch (err) {
         console.error("Failed to load overview:", err);
@@ -94,14 +75,7 @@ export default function AdminOverviewPage() {
       <div className="section-header">
         <div>
           <h1 className="section-title">Dashboard</h1>
-          {adminEmail && (
-            <p className="section-subtitle">
-              Welcome, <strong>{adminEmail}</strong>
-            </p>
-          )}
-          {!adminEmail && (
-            <p className="section-subtitle">Student Cabinet Elections Overview</p>
-          )}
+          <p className="section-subtitle">Student Cabinet Elections Overview</p>
         </div>
         <div className={`badge ${data?.electionStatus === "live" ? "badge--success" : data?.electionStatus === "scheduled" ? "badge--warning" : "badge--info"}`}>
           {data?.electionStatus === "live" ? "Live" : data?.electionStatus === "scheduled" ? "Scheduled" : "Not Started"}

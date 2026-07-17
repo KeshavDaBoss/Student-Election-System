@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 
 const NAV_ITEMS = [
   {
@@ -63,6 +63,7 @@ export default function AdminLayout({
   const router = useRouter();
   const { isSignedIn, userId } = useAuth();
   const { user } = useUser();
+  const { signOut } = useClerk();
   const [authorized, setAuthorized] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
   const [adminRole, setAdminRole] = useState("");
@@ -129,8 +130,14 @@ export default function AdminLayout({
     return <>{children}</>;
   }
 
-  const handleLogout = () => {
-    router.push("/sign-in");
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch {
+      // fallback: clear client state and redirect
+      document.cookie = "ses_admin_token=; path=/; max-age=0";
+      router.push("/sign-in");
+    }
   };
 
   return (

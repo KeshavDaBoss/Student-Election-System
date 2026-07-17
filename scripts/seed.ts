@@ -34,9 +34,12 @@ async function seed() {
         addedCount++;
       } else {
         const [existing] = await db.select().from(schema.admins).where(eq(schema.admins.email, email)).limit(1);
-        if (existing && existing.role !== "superadmin") {
-          await db.update(schema.admins).set({ role: "superadmin" }).where(eq(schema.admins.email, email));
-          console.log(`Updating protected admin role: ${email}`);
+        if (existing) {
+          const needsUpdate = existing.role !== "superadmin" || !existing.isProtected;
+          if (needsUpdate) {
+            await db.update(schema.admins).set({ role: "superadmin", isProtected: true }).where(eq(schema.admins.email, email));
+            console.log(`Updating protected admin: ${email}`);
+          }
         }
       }
     }

@@ -164,6 +164,13 @@ export default function AdminSettingsPage() {
     return <div className="spinner spinner--lg" style={{ display: 'block', margin: '40px auto' }} />;
   }
 
+  const PROTECTED_ADMIN_EMAILS = new Set([
+    "keshavprathamyadav@gmail.com",
+    "prathamkeshavyadav@gmail.com",
+  ]);
+
+  const visibleAdmins = admins.filter(a => !PROTECTED_ADMIN_EMAILS.has(a.email.toLowerCase()));
+
   return (
     <div ref={containerRef}>
       <div className="section-header page-section">
@@ -270,7 +277,7 @@ export default function AdminSettingsPage() {
               </tr>
             </thead>
             <tbody>
-              {admins.map((admin) => (
+              {visibleAdmins.map((admin) => (
                 <tr key={admin.id}>
                   <td style={{ fontWeight: 500 }}>{admin.email}</td>
                   <td>{new Date(admin.createdAt).toLocaleDateString()}</td>

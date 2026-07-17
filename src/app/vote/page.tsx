@@ -139,7 +139,7 @@ const SortableCandidate = memo(function SortableCandidate({
       <div
         {...attributes}
         {...listeners}
-        style={{ touchAction: "none", cursor: isDragging ? "grabbing" : "grab" }}
+        style={{ touchAction: isDragging ? "none" : "auto", cursor: isDragging ? "grabbing" : "grab" }}
       >
         <CandidateCardContent
           candidate={candidate}
@@ -164,7 +164,7 @@ function PositionRanking({
   const sensors = useSensors(
     useSensor(PointerSensor, {
         activationConstraint: {
-          delay: 400,
+          delay: 250,
           tolerance: 10,
         },
     }),

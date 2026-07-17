@@ -94,6 +94,13 @@ export default function AdminLayout({
           setAuthorized(true);
         } else {
           setAuthorized(false);
+          if (typeof window !== "undefined") {
+            try {
+              window.sessionStorage.setItem("admin_access_denied", "true");
+            } catch {
+              // ignore storage errors
+            }
+          }
         }
       } catch {
         setAuthorized(false);

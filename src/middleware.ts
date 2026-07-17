@@ -31,10 +31,10 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     }
   }
 
-  // Protect /admin routes with Clerk (except login, which redirects to sign-in)
+  // Protect /admin routes with Clerk (except /admin/login, which is public)
   if (isAdminRoute(req)) {
     if (pathname === "/admin/login") {
-      return NextResponse.redirect(new URL("/sign-in", req.url));
+      return NextResponse.next();
     }
 
     const { userId } = await auth();

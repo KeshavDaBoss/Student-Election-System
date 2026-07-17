@@ -2,18 +2,17 @@
 
 import { SignInButton } from "@clerk/nextjs";
 import { useAuth } from "@clerk/nextjs";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AdminLoginPage() {
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const showUnauthorized = searchParams.get("error") === "unauthorized";
 
-  useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      router.push("/admin");
-    }
-  }, [isLoaded, isSignedIn, router]);
+  const dismissUnauthorized = () => {
+    router.replace("/admin/login", { scroll: false });
+  };
 
   if (!isLoaded) {
     return (
@@ -36,6 +35,58 @@ export default function AdminLoginPage() {
   return (
     <div className="page-wrapper">
       <div className="center-card">
+        {showUnauthorized && (
+          <div
+            className="alert alert--error mb-lg"
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "10px",
+              marginBottom: "var(--space-lg)",
+              textAlign: "left",
+            }}
+            role="alert"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ flexShrink: 0, marginTop: "2px" }}
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: 600, margin: 0, fontSize: "0.9rem" }}>
+                This email isn&apos;t authorized to access the Admin Dashboard.
+              </p>
+              <button
+                type="button"
+                onClick={dismissUnauthorized}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "inherit",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  padding: 0,
+                  marginTop: "6px",
+                  fontSize: "0.8rem",
+                  opacity: 0.9,
+                }}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
         <div
           className="admin-logo"
           style={{ textAlign: "center", marginBottom: "var(--space-xl)" }}

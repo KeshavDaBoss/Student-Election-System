@@ -94,13 +94,6 @@ export default function AdminLayout({
           setAuthorized(true);
         } else {
           setAuthorized(false);
-          if (typeof window !== "undefined") {
-            try {
-              window.sessionStorage.setItem("admin_access_denied", "true");
-            } catch {
-              // ignore storage errors
-            }
-          }
         }
       } catch {
         setAuthorized(false);
@@ -112,6 +105,16 @@ export default function AdminLayout({
     checkAdmin();
   }, [isLoginPage, isSignedIn, router]);
 
+  useEffect(() => {
+    if (!checking && !authorized && !isLoginPage && isSignedIn) {
+      signOut().then(() => {
+        router.push("/admin/login?error=unauthorized");
+      }).catch(() => {
+        router.push("/admin/login?error=unauthorized");
+      });
+    }
+  }, [checking, authorized, isLoginPage, isSignedIn, router, signOut]);
+
   if (checking) {
     return (
       <div className="page-wrapper">
@@ -120,17 +123,8 @@ export default function AdminLayout({
     );
   }
 
-  if (!authorized) {
-    return (
-      <div className="page-wrapper">
-        <div className="center-card glass-card" style={{ textAlign: "center" }}>
-          <h2>Access Denied</h2>
-          <p style={{ color: "var(--gray-500)", marginTop: "var(--space-sm)" }}>
-            This login is not authorised to access the admin dashboard.
-          </p>
-        </div>
-      </div>
-    );
+  if (!authorized && !isLoginPage) {
+    return null;
   }
 
   if (isLoginPage) {
@@ -141,7 +135,6 @@ export default function AdminLayout({
     try {
       await signOut();
     } catch {
-      // fallback: clear client state and redirect
       document.cookie = "ses_admin_token=; path=/; max-age=0";
       router.push("/sign-in");
     }

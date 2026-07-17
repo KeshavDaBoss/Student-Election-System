@@ -1,73 +1,92 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SignIn } from "@clerk/nextjs";
 
 export default function SignInPage() {
   const router = useRouter();
-  const [denied, setDenied] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const searchParams = useSearchParams();
+  const [showUnauthorized, setShowUnauthorized] = useState(false);
 
   useEffect(() => {
-    try {
-      const flag = window.sessionStorage.getItem("admin_access_denied");
-      if (flag === "true") {
-        setDenied(true);
-      }
-    } catch {
-      // ignore storage errors
-    } finally {
-      setChecking(false);
+    const error = searchParams.get("error");
+    if (error === "unauthorized") {
+      setShowUnauthorized(true);
     }
-  }, []);
+  }, [searchParams]);
 
-  if (checking) {
-    return (
-      <div className="page-wrapper">
-        <div className="spinner spinner--lg" />
-      </div>
-    );
-  }
-
-  if (denied) {
-    return (
-      <div style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center" }}>
-        <div className="center-card glass-card" style={{ textAlign: "center", maxWidth: 420 }}>
-          <h2 style={{ marginBottom: "var(--space-sm)" }}>Access Blocked</h2>
-          <p style={{ color: "var(--gray-500)", marginBottom: "var(--space-lg)" }}>
-            This login is not authorised to access the admin dashboard. This restriction applies to this browser session.
-          </p>
-          <button
-            className="btn btn-secondary"
-            onClick={() => {
-              try {
-                window.sessionStorage.removeItem("admin_access_denied");
-              } catch {
-                // ignore
-              }
-              setDenied(false);
-            }}
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const dismissUnauthorized = () => {
+    setShowUnauthorized(false);
+    router.replace("/sign-in", { scroll: false });
+  };
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center" }}>
-      <SignIn
-        appearance={{
-          elements: {
-            footer: { display: "none" },
-            footerAction: { display: "none" },
-            poweredByFooter: { display: "none" },
-            devModeBanner: { display: "none" },
-          },
-        }}
-      />
+      <div style={{ width: "100%", maxWidth: 420, padding: "0 16px" }}>
+        {showUnauthorized && (
+          <div
+            className="alert alert--error mb-lg"
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "10px",
+              marginBottom: "var(--space-lg)",
+              textAlign: "left",
+            }}
+            role="alert"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ flexShrink: 0, marginTop: "2px" }}
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: 600, margin: 0, fontSize: "0.9rem" }}>
+                This email isn&apos;t authorized to access the Admin Dashboard.
+              </p>
+              <button
+                type="button"
+                onClick={dismissUnauthorized}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "inherit",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  padding: 0,
+                  marginTop: "6px",
+                  fontSize: "0.8rem",
+                  opacity: 0.9,
+                }}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
+        <SignIn
+          appearance={{
+            elements: {
+              footer: { display: "none" },
+              footerAction: { display: "none" },
+              poweredByFooter: { display: "none" },
+              devModeBanner: { display: "none" },
+            },
+          }}
+        />
+      </div>
     </div>
   );
 }

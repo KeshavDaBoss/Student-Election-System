@@ -8,7 +8,8 @@ import {
   DndContext,
   closestCenter,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -55,12 +56,14 @@ const CandidateCardContent = memo(function CandidateCardContent({
   isDragging = false,
   isOverlay = false,
   isReordering = false,
+  dragHandleProps,
 }: {
   candidate: CandidateData;
   rank: number;
   isDragging?: boolean;
   isOverlay?: boolean;
   isReordering?: boolean;
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
 }) {
   const getRankClass = (r: number) => {
     if (r === 1) return "rank-badge rank-badge--1";
@@ -74,6 +77,17 @@ const CandidateCardContent = memo(function CandidateCardContent({
       className={`candidate-card ${isDragging ? "dragging" : ""} ${isOverlay ? "drag-overlay" : ""} ${isReordering ? "reordering" : ""}`}
       style={isOverlay ? { boxShadow: "0 20px 60px rgba(0,0,0,0.25)", cursor: "grabbing" } : undefined}
     >
+      {dragHandleProps && (
+        <div
+          className="candidate-card__drag-handle"
+          aria-label="Drag to reorder"
+          {...dragHandleProps}
+        >
+          <span />
+          <span />
+          <span />
+        </div>
+      )}
       <div className="candidate-card__rank-col">{getRankClass(rank) && <div className={getRankClass(rank)}>{rank}</div>}</div>
       <div className="candidate-card__info">
         <div className="candidate-card__name">{candidate.name}</div>
@@ -130,23 +144,18 @@ const SortableCandidateReorder = memo(function SortableCandidateReorder({
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-    >
-      {/* The drag handle wraps the whole card */}
-      <div
-        {...attributes}
-        {...listeners}
-        style={{ touchAction: "none", cursor: isDragging ? "grabbing" : "grab" }}
-      >
-        <CandidateCardContent
-          candidate={candidate}
-          rank={rank}
-          isDragging={isDragging}
-          isReordering={isReordering}
-        />
-      </div>
+    <div ref={setNodeRef} style={style}>
+      <CandidateCardContent
+        candidate={candidate}
+        rank={rank}
+        isDragging={isDragging}
+        isReordering={isReordering}
+        dragHandleProps={{
+          ...attributes,
+          ...listeners,
+          style: { touchAction: "none" },
+        }}
+      />
     </div>
   );
 });
@@ -162,11 +171,11 @@ function PositionRanking({
   onRankingsChange: (positionId: number, rankings: number[]) => void;
 }) {
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-        activationConstraint: {
-          delay: 250,
-          tolerance: 10,
-        },
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 5 },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
@@ -177,7 +186,7 @@ function PositionRanking({
     .map((id) => position.candidates.find((c) => c.id === id))
     .filter(Boolean) as CandidateData[];
 
-  // Reorder Mode state: activated by a long-press (hold > 0.25s) and locks scrolling
+  // Reorder Mode state: activated when dragging from the handle; locks scrolling during drag
   const [reorderMode, setReorderMode] = useState(false);
   const [reorderingId, setReorderingId] = useState<number | null>(null);
 
@@ -194,7 +203,7 @@ function PositionRanking({
   }, [reorderMode]);
 
   function handleDragStart(event: DragStartEvent) {
-    // Long-press satisfied — enter Reorder Mode, mark the held card, lock scroll
+    // Enter Reorder Mode, mark the dragged card, lock scroll
     const id = event.active.id as number;
     setReorderingId(id);
     setReorderMode(true);
@@ -244,7 +253,7 @@ function PositionRanking({
       >
         {reorderMode
           ? "Reordering — drag to reorder, then release to finish. Top = 1st choice."
-          : "Press and hold a card for 0.25s, then drag to reorder. Top = 1st choice."}
+          : "Use the handle (≡) on each card to reorder. Top = 1st choice."}
       </p>
 
       <DndContext
@@ -260,7 +269,7 @@ function PositionRanking({
               display: "flex",
               flexDirection: "column",
               gap: "var(--space-sm)",
-              touchAction: reorderMode ? "none" : "auto",
+              touchAction: reorderMode ? "none" : "pan-y",
             }}
           >
             {orderedCandidates.map((candidate, index) => (
@@ -465,7 +474,7 @@ export default function VotePage() {
                 </span>
               </h2>
               <p className="mt-sm" style={{ fontSize: "0.9rem" }}>
-                Drag or use the arrow buttons to rank candidates by preference. Your 1st choice matters most.
+                Use the handle on each card to rank candidates by preference. Your 1st choice matters most.
               </p>
             </div>
 

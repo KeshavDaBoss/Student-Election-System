@@ -54,11 +54,13 @@ const CandidateCardContent = memo(function CandidateCardContent({
   rank,
   isDragging = false,
   isOverlay = false,
+  isReordering = false,
 }: {
   candidate: CandidateData;
   rank: number;
   isDragging?: boolean;
   isOverlay?: boolean;
+  isReordering?: boolean;
 }) {
   const getRankClass = (r: number) => {
     if (r === 1) return "rank-badge rank-badge--1";
@@ -69,7 +71,7 @@ const CandidateCardContent = memo(function CandidateCardContent({
 
   return (
     <div
-      className={`candidate-card ${isDragging ? "dragging" : ""} ${isOverlay ? "drag-overlay" : ""}`}
+      className={`candidate-card ${isDragging ? "dragging" : ""} ${isOverlay ? "drag-overlay" : ""} ${isReordering ? "reordering" : ""}`}
       style={isOverlay ? { boxShadow: "0 20px 60px rgba(0,0,0,0.25)", cursor: "grabbing" } : undefined}
     >
       <div className="candidate-card__rank-col">{getRankClass(rank) && <div className={getRankClass(rank)}>{rank}</div>}</div>
@@ -103,13 +105,15 @@ const CandidateCardContent = memo(function CandidateCardContent({
   );
 });
 
-// --- Sortable Candidate Card ---
-const SortableCandidate = memo(function SortableCandidate({
+// --- Sortable Candidate Card with Reorder Mode feedback ---
+const SortableCandidateReorder = memo(function SortableCandidateReorder({
   candidate,
   rank,
+  isReordering,
 }: {
   candidate: CandidateData;
   rank: number;
+  isReordering: boolean;
 }) {
   const {
     attributes,
@@ -139,12 +143,13 @@ const SortableCandidate = memo(function SortableCandidate({
       <div
         {...attributes}
         {...listeners}
-        style={{ touchAction: isDragging ? "none" : "auto", cursor: isDragging ? "grabbing" : "grab" }}
+        style={{ touchAction: "none", cursor: isDragging ? "grabbing" : "grab" }}
       >
         <CandidateCardContent
           candidate={candidate}
           rank={rank}
           isDragging={isDragging}
+          isReordering={isReordering}
         />
       </div>
     </div>
@@ -177,8 +182,32 @@ function PositionRanking({
     .map((id) => position.candidates.find((c) => c.id === id))
     .filter(Boolean) as CandidateData[];
 
-  function handleDragStart(_event: DragStartEvent) {
-    // no-op
+  // Reorder Mode state: activated by a long-press (hold > 0.25s) and locks scrolling
+  const [reorderMode, setReorderMode] = useState(false);
+  const [reorderingId, setReorderingId] = useState<number | null>(null);
+
+  // Interaction Lock: prevent page scrolling while in Reorder Mode so the user
+  // can drag without the list scrolling underneath.
+  useEffect(() => {
+    if (reorderMode) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [reorderMode]);
+
+  function handleDragStart(event: DragStartEvent) {
+    // Long-press satisfied — enter Reorder Mode, mark the held card, lock scroll
+    const id = event.active.id as number;
+    setReorderingId(id);
+    setReorderMode(true);
+  }
+
+  function deactivateReorderMode() {
+    setReorderMode(false);
+    setReorderingId(null);
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -189,6 +218,11 @@ function PositionRanking({
       const newRankings = arrayMove(rankings, oldIndex, newIndex);
       onRankingsChange(position.id, newRankings);
     }
+    deactivateReorderMode();
+  }
+
+  function handleDragCancel() {
+    deactivateReorderMode();
   }
 
   return (
@@ -213,7 +247,9 @@ function PositionRanking({
           fontStyle: "italic",
         }}
       >
-        Press and hold a card for 0.7s, then drag to reorder. Top = 1st choice.
+        {reorderMode
+          ? "Reordering — drag to reorder, then release to finish. Top = 1st choice."
+          : "Press and hold a card for 0.25s, then drag to reorder. Top = 1st choice."}
       </p>
 
       <DndContext
@@ -221,14 +257,23 @@ function PositionRanking({
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
         <SortableContext items={rankings} strategy={verticalListSortingStrategy}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-sm)",
+              touchAction: reorderMode ? "none" : "auto",
+            }}
+          >
             {orderedCandidates.map((candidate, index) => (
-              <SortableCandidate
+              <SortableCandidateReorder
                 key={candidate.id}
                 candidate={candidate}
                 rank={index + 1}
+                isReordering={reorderMode && reorderingId === candidate.id}
               />
             ))}
           </div>

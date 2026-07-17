@@ -506,6 +506,11 @@ a:hover {
   box-shadow: var(--shadow-md), 0 0 0 3px rgba(255, 152, 0, 0.15);
 }
 
+.candidate-card.reordering {
+  border-color: var(--orange-500);
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.15);
+}
+
 .candidate-card.drag-overlay {
   cursor: grabbing;
   border-color: var(--orange-500);

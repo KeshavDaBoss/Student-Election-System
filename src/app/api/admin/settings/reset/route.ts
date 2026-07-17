@@ -21,8 +21,8 @@ export async function POST(request: NextRequest) {
     // 2. Delete all suggestions
     await db.delete(suggestions);
 
-    // 3. Reset all students hasVoted to false
-    await db.update(students).set({ hasVoted: false, votedAt: null });
+    // 3. Delete all voters (students)
+    await db.delete(students);
 
     // 4. Clear rate limiting
     await db.delete(loginAttempts);

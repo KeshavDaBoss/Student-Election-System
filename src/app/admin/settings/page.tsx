@@ -136,7 +136,7 @@ export default function AdminSettingsPage() {
 
       const data = await res.json();
       if (res.ok) {
-        setMessage({ type: "success", text: "Election data has been completely reset." });
+        setMessage({ type: "success", text: "Election data and all voters have been completely reset." });
         setShowResetConfirm(false);
         setResetEmailConfirm("");
       } else {
@@ -343,7 +343,7 @@ export default function AdminSettingsPage() {
       <div className="glass-card page-section" style={{ border: "1px solid var(--error-light)", marginTop: "var(--space-2xl)" }}>
         <h2 className="mb-md" style={{ color: "var(--error)" }}>Danger Zone</h2>
         <p className="mb-lg" style={{ fontSize: "0.875rem", color: "var(--gray-500)" }}>
-          Resetting the election will permanently delete all votes cast, all student suggestions, and reset every voter's status to "Pending". <strong>This action cannot be undone.</strong>
+          Resetting the election will permanently delete all votes cast, all student suggestions, and every registered voter. <strong>This action cannot be undone.</strong>
         </p>
         
         {!showResetConfirm ? (

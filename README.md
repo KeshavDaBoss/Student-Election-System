@@ -2,7 +2,7 @@
 
 **By students, for students.**
 
-The Student Election System (SES) is an online platform built for Army Public School Bolarum to run fair, organized student cabinet elections. Students cast their votes from any device with a browser. Election organizers manage everything—voters, candidates, schedules, and results—from a dedicated admin area.
+The Student Election System (SES) is an online platform built specifically for Army Public School Bolarum to run fair, organized student cabinet elections. Students cast their votes from any device with a browser. Election organizers manage everything—voters, candidates, schedules, and results—from a dedicated admin area.
 
 SES uses **ranked-choice voting**, which means voters can rank candidates in order of preference rather than picking just one name. That helps produce winners who reflect what the student body actually wants, even when no single candidate gets a majority on the first count.
 
